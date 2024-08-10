@@ -32,10 +32,12 @@ const client = createOauth2Client({
   retries: 3,
 });
 
-const projects = await client.get('/rest/api/3/project');
+const projects = await client.GET('/rest/api/3/project');
 ```
 
 ### Basic Authentication Client
+
+For personal scripts, bots, and ad-hoc execution of the REST APIs use basic authentication. Read more [here](https://developer.atlassian.com/cloud/jira/platform/basic-auth-for-rest-apis/).
 
 ```ts
 import { createBasicAuthClient } from 'atlassian-ts';
@@ -47,5 +49,5 @@ const client = createBasicAuthClient({
   retries: 3,
 });
 
-const projects = await client.get('/rest/api/3/project');
+const projects = await client.GET('/rest/api/3/project');
 ```
