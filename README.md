@@ -1,5 +1,9 @@
 # atlassian-ts
 
+[![Version](https://img.shields.io/npm/v/atlassian-ts.svg)](https://www.npmjs.org/package/atlassian-ts) [![Build Status](https://github.com/haydenbleasel/atlassian-ts/actions/workflows/push.yml/badge.svg?branch=main)](https://github.com/haydenbleasel/atlassian-ts/actions?query=branch%3Amain)
+
+![atlassian-ts](/sample.png)
+
 A type-safe Typescript client for the Atlassian REST API, powered by openapi-fetch and ky.
 
 ## Features
