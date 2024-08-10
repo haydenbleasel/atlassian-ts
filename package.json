@@ -1,0 +1,62 @@
+{
+  "name": "atlassian-ts",
+  "version": "1.0.0",
+  "description": "A type-safe client for the Atlassian REST API, powered by openapi-fetch and ky.",
+  "files": ["dist"],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "scripts": {
+    "prepublishOnly": "pnpm build",
+    "prebuild": "npx openapi-typescript@6.7.6 https://dac-static.atlassian.com/cloud/jira/platform/swagger-v3.v3.json -o ./src/types.d.ts",
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haydenbleasel/atlassian-ts.git"
+  },
+  "keywords": [
+    "atlassian",
+    "rest",
+    "api",
+    "client",
+    "typescript",
+    "openapi",
+    "fetch",
+    "ky"
+  ],
+  "author": "Hayden Bleasel <hello@haydenbleasel.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/haydenbleasel/atlassian-ts/issues"
+  },
+  "homepage": "https://github.com/haydenbleasel/atlassian-ts#readme",
+  "devDependencies": {
+    "@biomejs/biome": "1.8.3",
+    "@types/node": "^22.2.0",
+    "tsup": "^8.2.4",
+    "ultracite": "4.0.4"
+  },
+  "dependencies": {
+    "ky": "^1.5.0",
+    "openapi-fetch": "^0.11.0"
+  }
+}
