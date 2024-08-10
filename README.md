@@ -24,9 +24,9 @@ You can create a client for either OAuth 2.0 or Basic Authentication.
 For integrations that are not Forge or Connect apps, use OAuth 2.0 authorization code grants (3LO) for security (3LO scopes are shown as for operations OAuth scopes required). Read more [here](https://developer.atlassian.com/cloud/jira/platform/oauth-2-3lo-apps/).
 
 ```ts
-import { createOAuth2Client } from 'atlassian-ts';
+import { createOauth2Client } from 'atlassian-ts';
 
-const client = createOAuth2Client({
+const client = createOauth2Client({
   cloudId: 'your-cloud-id',
   accessToken: 'your-access-token',
   retries: 3,
