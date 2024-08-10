@@ -23,7 +23,10 @@ importers:
         version: 22.2.0
       tsup:
         specifier: ^8.2.4
-        version: 8.2.4
+        version: 8.2.4(typescript@5.5.4)
+      typescript:
+        specifier: ^5.5.4
+        version: 5.5.4
       ultracite:
         specifier: 4.0.5
         version: 4.0.5
@@ -765,6 +768,11 @@ packages:
       typescript:
         optional: true
 
+  typescript@5.5.4:
+    resolution: {integrity: sha512-Mtq29sKDAEYP7aljRgtPOpTvOfbwRWlS6dPRzwjdE+C0R4brX/GUyhHSecbHMFLNBLcJIPt9nl9yG5TZ1weH+Q==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
   ultracite@4.0.5:
     resolution: {integrity: sha512-wRgyRzyQwmaYrB68VQcX62v2sT+vieaQ9kvRJ4+h/dkbG7qFLtYgbOLkzZGRThEsAjBvvMAhFydZVlrBga3JBQ==}
 
@@ -1373,7 +1381,7 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
-  tsup@8.2.4:
+  tsup@8.2.4(typescript@5.5.4):
     dependencies:
       bundle-require: 5.0.0(esbuild@0.23.0)
       cac: 6.7.14
@@ -1391,11 +1399,15 @@ snapshots:
       source-map: 0.8.0-beta.0
       sucrase: 3.35.0
       tree-kill: 1.2.2
+    optionalDependencies:
+      typescript: 5.5.4
     transitivePeerDependencies:
       - jiti
       - supports-color
       - tsx
       - yaml
+
+  typescript@5.5.4: {}
 
   ultracite@4.0.5: {}
 
