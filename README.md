@@ -1,6 +1,13 @@
 # atlassian-ts
 
-A type-safe client for the Atlassian REST API, powered by openapi-fetch and ky.
+A type-safe Typescript client for the Atlassian REST API, powered by openapi-fetch and ky.
+
+## Features
+
+- Full TypeScript support for Atlassian REST API endpoints
+- OAuth 2.0 and Basic Authentication support
+- Automatic retries with configurable limits
+- Built on top of robust libraries: openapi-fetch and ky
 
 ## Installation
 
