@@ -25,8 +25,8 @@ importers:
         specifier: ^8.2.4
         version: 8.2.4
       ultracite:
-        specifier: 4.0.4
-        version: 4.0.4
+        specifier: 4.0.5
+        version: 4.0.5
 
 packages:
 
@@ -765,8 +765,8 @@ packages:
       typescript:
         optional: true
 
-  ultracite@4.0.4:
-    resolution: {integrity: sha512-+YlIqAEENowg/jKLomxqEsUWXQ5M+Ut/U1Qg0e6KyWtuJLeOak/9cNRJkMKs5ydqJ2fxv7+TRIB9btsaIlKqkQ==}
+  ultracite@4.0.5:
+    resolution: {integrity: sha512-wRgyRzyQwmaYrB68VQcX62v2sT+vieaQ9kvRJ4+h/dkbG7qFLtYgbOLkzZGRThEsAjBvvMAhFydZVlrBga3JBQ==}
 
   undici-types@6.13.0:
     resolution: {integrity: sha512-xtFJHudx8S2DSoujjMd1WeWvn7KKWFRESZTMeL1RptAYERu29D6jphMjjY+vn96jvN3kVPDNxU/E13VTaXj6jg==}
@@ -1397,7 +1397,7 @@ snapshots:
       - tsx
       - yaml
 
-  ultracite@4.0.4: {}
+  ultracite@4.0.5: {}
 
   undici-types@6.13.0: {}
 
