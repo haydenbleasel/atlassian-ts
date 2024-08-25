@@ -2780,6 +2780,46 @@ export interface paths {
      *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
      */
     post: operations["addWorklog"];
+    /**
+     * Bulk delete worklogs
+     * @description Deletes a list of worklogs from an issue. This is an experimental API with limitations:
+     *
+     *  *  You can't delete more than 5000 worklogs at once.
+     *  *  No notifications will be sent for deleted worklogs.
+     *
+     * Time tracking must be enabled in Jira, otherwise this operation returns an error. For more information, see [Configuring time tracking](https://confluence.atlassian.com/x/qoXKM).
+     *
+     * **[Permissions](#permissions) required:**
+     *
+     *  *  *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project containing the issue.
+     *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
+     *  *  *Delete all worklogs*[ project permission](https://confluence.atlassian.com/x/yodKLg) to delete any worklog.
+     *  *  If any worklog has visibility restrictions, belongs to the group or has the role visibility is restricted to.
+     */
+    delete: operations["bulkDeleteWorklogs"];
+  };
+  "/rest/api/3/issue/{issueIdOrKey}/worklog/move": {
+    /**
+     * Bulk move worklogs
+     * @description Moves a list of worklogs from one issue to another. This is an experimental API with several limitations:
+     *
+     *  *  You can't move more than 5000 worklogs at once.
+     *  *  You can't move worklogs containing an attachment.
+     *  *  You can't move worklogs restricted by project roles.
+     *  *  No notifications will be sent for moved worklogs.
+     *  *  No issue history will be recorded for moved worklogs.
+     *  *  Time tracking will not be updated for the source and destination issues.
+     *
+     * Time tracking must be enabled in Jira, otherwise this operation returns an error. For more information, see [Configuring time tracking](https://confluence.atlassian.com/x/qoXKM).
+     *
+     * **[Permissions](#permissions) required:**
+     *
+     *  *  *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the projects containing the source and destination issues.
+     *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
+     *  *  *Delete all worklogs*[ and *Edit all worklogs*](https://confluence.atlassian.com/x/yodKLg)[project permission](https://confluence.atlassian.com/x/yodKLg)
+     *  *  If the worklog has visibility restrictions, belongs to the group or has the role visibility is restricted to.
+     */
+    post: operations["bulkMoveWorklogs"];
   };
   "/rest/api/3/issue/{issueIdOrKey}/worklog/{id}": {
     /**
@@ -5183,6 +5223,20 @@ export interface paths {
      *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
      */
     post: operations["searchForIssuesUsingJqlPost"];
+  };
+  "/rest/api/3/search/approximate-count": {
+    /**
+     * Count issues using JQL
+     * @description Provide an estimated count of the issues that match the [JQL](https://confluence.atlassian.com/x/egORLQ). Recent updates might not be immediately visible in the returned output. This endpoint requires JQL to be bounded.
+     *
+     * This operation can be accessed anonymously.
+     *
+     * **[Permissions](#permissions) required:** Issues are included in the response where the user has:
+     *
+     *  *  *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project containing the issue.
+     *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
+     */
+    post: operations["countIssues"];
   };
   "/rest/api/3/search/id": {
     /**
@@ -11716,6 +11770,17 @@ export interface components {
     IssuesUpdateBean: {
       issueUpdates?: components["schemas"]["IssueUpdateDetails"][];
       [key: string]: unknown;
+    };
+    JQLCountRequestBean: {
+      /** @description A [JQL](https://confluence.atlassian.com/x/egORLQ) expression. Requires where clause to be present. */
+      jql?: string;
+    };
+    JQLCountResultsBean: {
+      /**
+       * Format: int64
+       * @description Number of issues matching JQL query.
+       */
+      count?: number;
     };
     /** @description The JQL queries to be converted. */
     JQLPersonalDataMigrationRequest: {
@@ -18376,6 +18441,12 @@ export interface components {
       /** @description A list of worklog IDs. */
       ids: number[];
     };
+    WorklogsMoveRequestBean: {
+      /** @description A list of worklog IDs. */
+      ids?: number[];
+      /** @description The issue id or key of the destination issue */
+      issueIdOrKey?: string;
+    };
     /** @description Details about data policy. */
     WorkspaceDataPolicy: {
       /** @description Whether the workspace contains any content inaccessible to the requesting application. */
@@ -19762,13 +19833,13 @@ export interface operations {
       /** @description Returned if the request is invalid. */
       400: {
         content: {
-          "application/json": components["schemas"]["ErrorCollection"];
+          "application/json": components["schemas"]["BulkOperationErrorResponse"];
         };
       };
       /** @description Returned if the authentication credentials are incorrect or missing. */
       401: {
         content: {
-          "application/json": components["schemas"]["ErrorCollection"];
+          "application/json": components["schemas"]["BulkOperationErrorResponse"];
         };
       };
     };
@@ -26115,7 +26186,7 @@ export interface operations {
           "application/json": components["schemas"]["ErrorCollection"];
         };
       };
-      /** @description Returned if a configuration problem prevents the creation of the issue. (refer to the [changelog](https://developer.atlassian.com/changelog/#CHANGE-1364) *for more details.* */
+      /** @description Returned if a configuration problem prevents the creation of the issue. */
       422: {
         content: {
           "application/json": components["schemas"]["ErrorCollection"];
@@ -27415,11 +27486,11 @@ export interface operations {
       404: {
         content: never;
       };
-      /** @description Returned if the issue could not be updated due to a conflicting update. (refer to the [changelog](https://developer.atlassian.com/changelog/#CHANGE-1364) *for more details.* */
+      /** @description Returned if the issue could not be updated due to a conflicting update. */
       409: {
         content: never;
       };
-      /** @description Returned if a configuration problem prevents the issue being updated. (refer to the [changelog](https://developer.atlassian.com/changelog/#CHANGE-1364) *for more details.* */
+      /** @description Returned if a configuration problem prevents the issue being updated. */
       422: {
         content: never;
       };
@@ -28965,7 +29036,7 @@ export interface operations {
       404: {
         content: never;
       };
-      /** @description Returned if the issue could not be updated due to a conflicting update. (refer to the [changelog](https://developer.atlassian.com/changelog/#CHANGE-1364) *for more details.* */
+      /** @description Returned if the issue could not be updated due to a conflicting update. */
       409: {
         content: never;
       };
@@ -28981,7 +29052,7 @@ export interface operations {
       413: {
         content: never;
       };
-      /** @description Returned if a configuration problem prevents the creation of the issue. (refer to the [changelog](https://developer.atlassian.com/changelog/#CHANGE-1364) *for more details.* */
+      /** @description Returned if a configuration problem prevents the creation of the issue. */
       422: {
         content: never;
       };
@@ -29411,6 +29482,175 @@ export interface operations {
        *  *  attachments
        */
       413: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Bulk delete worklogs
+   * @description Deletes a list of worklogs from an issue. This is an experimental API with limitations:
+   *
+   *  *  You can't delete more than 5000 worklogs at once.
+   *  *  No notifications will be sent for deleted worklogs.
+   *
+   * Time tracking must be enabled in Jira, otherwise this operation returns an error. For more information, see [Configuring time tracking](https://confluence.atlassian.com/x/qoXKM).
+   *
+   * **[Permissions](#permissions) required:**
+   *
+   *  *  *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project containing the issue.
+   *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
+   *  *  *Delete all worklogs*[ project permission](https://confluence.atlassian.com/x/yodKLg) to delete any worklog.
+   *  *  If any worklog has visibility restrictions, belongs to the group or has the role visibility is restricted to.
+   */
+  bulkDeleteWorklogs: {
+    parameters: {
+      query?: {
+        /**
+         * @description Defines how to update the issue's time estimate, the options are:
+         *
+         *  *  `leave` Leaves the estimate unchanged.
+         *  *  `auto` Reduces the estimate by the aggregate value of `timeSpent` across all worklogs being deleted.
+         */
+        adjustEstimate?: "leave" | "auto";
+        /** @description Whether the work log entries should be removed to the issue even if the issue is not editable, because jira.issue.editable set to false or missing. For example, the issue is closed. Connect and Forge app users with admin permission can use this flag. */
+        overrideEditableFlag?: boolean;
+      };
+      path: {
+        /** @description The ID or key of the issue. */
+        issueIdOrKey: string;
+      };
+    };
+    /** @description A JSON object containing a list of worklog IDs. */
+    requestBody: {
+      content: {
+        /**
+         * @example {
+         *   "ids": [
+         *     1,
+         *     2,
+         *     5,
+         *     10
+         *   ]
+         * }
+         */
+        "application/json": components["schemas"]["WorklogIdsRequestBean"];
+      };
+    };
+    responses: {
+      /** @description Returned if the bulk deletion request was partially successful, with a message indicating partial success. */
+      200: {
+        content: never;
+      };
+      /** @description Returned if the request is successful. */
+      204: {
+        content: never;
+      };
+      /**
+       * @description Returned if:
+       *
+       *  *  `request` is not provided or is invalid
+       *  *  the user does not have permission to delete the worklogs
+       *  *  the number of worklogs being deleted exceeds the limit
+       */
+      400: {
+        content: never;
+      };
+      /** @description Returned if the authentication credentials are incorrect. */
+      401: {
+        content: never;
+      };
+      /**
+       * @description Returned if:
+       *
+       *  *  the issue is not found or user does not have permission to view the issue
+       *  *  at least one of the worklogs is not associated with the provided issue
+       *  *  time tracking is disabled
+       */
+      404: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Bulk move worklogs
+   * @description Moves a list of worklogs from one issue to another. This is an experimental API with several limitations:
+   *
+   *  *  You can't move more than 5000 worklogs at once.
+   *  *  You can't move worklogs containing an attachment.
+   *  *  You can't move worklogs restricted by project roles.
+   *  *  No notifications will be sent for moved worklogs.
+   *  *  No issue history will be recorded for moved worklogs.
+   *  *  Time tracking will not be updated for the source and destination issues.
+   *
+   * Time tracking must be enabled in Jira, otherwise this operation returns an error. For more information, see [Configuring time tracking](https://confluence.atlassian.com/x/qoXKM).
+   *
+   * **[Permissions](#permissions) required:**
+   *
+   *  *  *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the projects containing the source and destination issues.
+   *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
+   *  *  *Delete all worklogs*[ and *Edit all worklogs*](https://confluence.atlassian.com/x/yodKLg)[project permission](https://confluence.atlassian.com/x/yodKLg)
+   *  *  If the worklog has visibility restrictions, belongs to the group or has the role visibility is restricted to.
+   */
+  bulkMoveWorklogs: {
+    parameters: {
+      query?: {
+        /** @description Whether the work log entry should be added to the issue even if the issue is not editable, because jira.issue.editable set to false or missing. For example, the issue is closed. Connect and Forge app users with admin permission can use this flag. */
+        overrideEditableFlag?: boolean;
+      };
+      path: {
+        issueIdOrKey: string;
+      };
+    };
+    /** @description A JSON object containing a list of worklog IDs and the ID or key of the destination issue. */
+    requestBody: {
+      content: {
+        /**
+         * @example {
+         *   "ids": [
+         *     1,
+         *     2,
+         *     5,
+         *     10
+         *   ],
+         *   "issueIdOrKey": "ABC-1234"
+         * }
+         */
+        "application/json": components["schemas"]["WorklogsMoveRequestBean"];
+      };
+    };
+    responses: {
+      /** @description Returned if the request is partially successful. */
+      200: {
+        content: never;
+      };
+      /** @description Returned if the request is successful. */
+      204: {
+        content: never;
+      };
+      /**
+       * @description Returned if:
+       *
+       *  *  `request` is not provided or is invalid
+       *  *  the user does not have permission to move the worklogs
+       *  *  the number of worklogs being moved exceeds the limit
+       *  *  the total size of worklogs being moved is too large
+       *  *  any worklog contains attachments
+       */
+      400: {
+        content: never;
+      };
+      /** @description Returned if the authentication credentials are incorrect. */
+      401: {
+        content: never;
+      };
+      /**
+       * @description Returned if:
+       *
+       *  *  the issue is not found or the user does not have permission to view the issue
+       *  *  at least one of the worklogs is not associated with the provided issue
+       *  *  time tracking is disabled
+       */
+      404: {
         content: never;
       };
     };
@@ -39763,6 +40003,46 @@ export interface operations {
         content: never;
       };
       /** @description Returned if the authentication credentials are incorrect or missing. */
+      401: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Count issues using JQL
+   * @description Provide an estimated count of the issues that match the [JQL](https://confluence.atlassian.com/x/egORLQ). Recent updates might not be immediately visible in the returned output. This endpoint requires JQL to be bounded.
+   *
+   * This operation can be accessed anonymously.
+   *
+   * **[Permissions](#permissions) required:** Issues are included in the response where the user has:
+   *
+   *  *  *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project containing the issue.
+   *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
+   */
+  countIssues: {
+    /** @description A JSON object containing the search request. */
+    requestBody: {
+      content: {
+        /**
+         * @example {
+         *   "count": 153
+         * }
+         */
+        "application/json": components["schemas"]["JQLCountRequestBean"];
+      };
+    };
+    responses: {
+      /** @description Returned if the request is successful. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["JQLCountResultsBean"];
+        };
+      };
+      /** @description Returned if the JQL query cannot be parsed. */
+      400: {
+        content: never;
+      };
+      /** @description Returned if the authentication credentials are incorrect. */
       401: {
         content: never;
       };
