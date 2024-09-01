@@ -60,6 +60,6 @@
   },
   "dependencies": {
     "ky": "^1.5.0",
-    "openapi-fetch": "^0.11.0"
+    "openapi-fetch": "^0.12.0"
   }
 }
