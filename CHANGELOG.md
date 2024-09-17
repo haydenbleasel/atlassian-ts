@@ -1,3 +1,23 @@
+# v1.0.7 (Tue Sep 17 2024)
+
+#### ⚠️ Pushed to `main`
+
+- Update types.d.ts ([@haydenbleasel](https://github.com/haydenbleasel))
+
+#### 🔩 Dependency Updates
+
+- Bump ky from 1.5.0 to 1.7.1 [#4](https://github.com/haydenbleasel/atlassian-ts/pull/4) ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump openapi-fetch from 0.11.0 to 0.12.0 [#5](https://github.com/haydenbleasel/atlassian-ts/pull/5) ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump ultracite from 4.0.5 to 4.0.6 [#6](https://github.com/haydenbleasel/atlassian-ts/pull/6) ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump @types/node from 22.2.0 to 22.5.2 [#7](https://github.com/haydenbleasel/atlassian-ts/pull/7) ([@dependabot[bot]](https://github.com/dependabot[bot]))
+
+#### Authors: 2
+
+- [@dependabot[bot]](https://github.com/dependabot[bot])
+- Hayden Bleasel ([@haydenbleasel](https://github.com/haydenbleasel))
+
+---
+
 # v1.0.6 (Sun Aug 25 2024)
 
 #### ⚠️ Pushed to `main`
