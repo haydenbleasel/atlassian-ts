@@ -299,7 +299,7 @@ export interface paths {
   "/rest/api/3/avatar/{type}/system": {
     /**
      * Get system avatars by type
-     * @description Returns a list of system avatar details by owner type, where the owner types are issue type, project, or user.
+     * @description Returns a list of system avatar details by owner type, where the owner types are issue type, project, user or priority.
      *
      * This operation can be accessed anonymously.
      *
@@ -863,6 +863,41 @@ export interface paths {
      * Permission to access Jira Software is required to access Jira Software context variables (`board` and `sprint`) or fields (for example, `issue.sprint`).
      */
     post: operations["evaluateJiraExpression"];
+  };
+  "/rest/api/3/expression/evaluate": {
+    /**
+     * Evaluate Jira expression using enhanced search API
+     * @description Evaluates a Jira expression and returns its value. The difference between this and `eval` is that this endpoint uses the enhanced search API when evaluating JQL queries. This API is eventually consistent, unlike the strongly consistent `eval` API. This allows for better performance and scalability. In addition, this API's response for JQL evaluation is based on a scrolling view (backed by a `nextPageToken`) instead of a paginated view (backed by `startAt` and `totalCount`).
+     *
+     * This resource can be used to test Jira expressions that you plan to use elsewhere, or to fetch data in a flexible way. Consult the [Jira expressions documentation](https://developer.atlassian.com/cloud/jira/platform/jira-expressions/) for more details.
+     *
+     * #### Context variables ####
+     *
+     * The following context variables are available to Jira expressions evaluated by this resource. Their presence depends on various factors; usually you need to manually request them in the context object sent in the payload, but some of them are added automatically under certain conditions.
+     *
+     *  *  `user` ([User](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#user)): The current user. Always available and equal to `null` if the request is anonymous.
+     *  *  `app` ([App](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#app)): The [Connect app](https://developer.atlassian.com/cloud/jira/platform/index/#connect-apps) that made the request. Available only for authenticated requests made by Connect apps (read more here: [Authentication for Connect apps](https://developer.atlassian.com/cloud/jira/platform/security-for-connect-apps/)).
+     *  *  `issue` ([Issue](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#issue)): The current issue. Available only when the issue is provided in the request context object.
+     *  *  `issues` ([List](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#list) of [Issues](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#issue)): A collection of issues matching a JQL query. Available only when JQL is provided in the request context object.
+     *  *  `project` ([Project](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#project)): The current project. Available only when the project is provided in the request context object.
+     *  *  `sprint` ([Sprint](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#sprint)): The current sprint. Available only when the sprint is provided in the request context object.
+     *  *  `board` ([Board](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#board)): The current board. Available only when the board is provided in the request context object.
+     *  *  `serviceDesk` ([ServiceDesk](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#servicedesk)): The current service desk. Available only when the service desk is provided in the request context object.
+     *  *  `customerRequest` ([CustomerRequest](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#customerrequest)): The current customer request. Available only when the customer request is provided in the request context object.
+     *
+     * In addition, you can pass custom context variables along with their types. You can then access them from the Jira expression by key. You can use the following variables in a custom context:
+     *
+     *  *  `user`: A [user](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#user) specified as an Atlassian account ID.
+     *  *  `issue`: An [issue](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#issue) specified by ID or key. All the fields of the issue object are available in the Jira expression.
+     *  *  `json`: A JSON object containing custom content.
+     *  *  `list`: A JSON list of `user`, `issue`, or `json` variable types.
+     *
+     * This operation can be accessed anonymously.
+     *
+     * **[Permissions](#permissions) required**: None. However, an expression may return different results for different users depending on their permissions. For example, different users may see different comments on the same issue.
+     * Permission to access Jira Software is required to access Jira Software context variables (`board` and `sprint`) or fields (for example, `issue.sprint`).
+     */
+    post: operations["evaluateJSISJiraExpression"];
   };
   "/rest/api/3/field": {
     /**
@@ -1924,6 +1959,24 @@ export interface paths {
      */
     post: operations["createIssues"];
   };
+  "/rest/api/3/issue/bulkfetch": {
+    /**
+     * Bulk fetch issues
+     * @description Returns the details for a set of requested issues. You can request up to 100 issues.
+     *
+     * Each issue is identified by its ID or key, however, if the identifier doesn't match an issue, a case-insensitive search and check for moved issues is performed. If a matching issue is found its details are returned, a 302 or other redirect is **not** returned.
+     *
+     * Issues will be returned in ascending `id` order. If there are errors, Jira will return a list of issues which couldn't be fetched along with error messages.
+     *
+     * This operation can be accessed anonymously.
+     *
+     * **[Permissions](#permissions) required:** Issues are included in the response where the user has:
+     *
+     *  *  *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project that the issue is in.
+     *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
+     */
+    post: operations["bulkFetchIssues"];
+  };
   "/rest/api/3/issue/createmeta": {
     /**
      * Get create issue metadata
@@ -2807,6 +2860,7 @@ export interface paths {
      *  *  You can't move worklogs containing an attachment.
      *  *  You can't move worklogs restricted by project roles.
      *  *  No notifications will be sent for moved worklogs.
+     *  *  No webhooks or events will be sent for moved worklogs.
      *  *  No issue history will be recorded for moved worklogs.
      *  *  Time tracking will not be updated for the source and destination issues.
      *
@@ -4129,7 +4183,10 @@ export interface paths {
     get: operations["getPriorities"];
     /**
      * Create priority
+     * @deprecated
      * @description Creates an issue priority.
+     *
+     * Deprecation applies to iconUrl param in request body which will be sunset on 16th Mar 2025. For more details refer to [changelog](https://developer.atlassian.com/changelog/#CHANGE-1525).
      *
      * **[Permissions](#permissions) required:** *Administer Jira* [global permission](https://confluence.atlassian.com/x/x4dKLg).
      */
@@ -4177,7 +4234,12 @@ export interface paths {
     get: operations["getPriority"];
     /**
      * Update priority
+     * @deprecated
      * @description Updates an issue priority.
+     *
+     * At least one request body parameter must be defined.
+     *
+     * Deprecation applies to iconUrl param in request body which will be sunset on 16th Mar 2025. For more details refer to [changelog](https://developer.atlassian.com/changelog/#CHANGE-1525).
      *
      * **[Permissions](#permissions) required:** *Administer Jira* [global permission](https://confluence.atlassian.com/x/x4dKLg).
      */
@@ -5254,6 +5316,30 @@ export interface paths {
      */
     post: operations["searchForIssuesIds"];
   };
+  "/rest/api/3/search/jql": {
+    /**
+     * Search for issues using JQL enhanced search (GET)
+     * @description Searches for issues using [JQL](https://confluence.atlassian.com/x/egORLQ). Recent updates might not be immediately visible in the returned search results. If you need read-after-write consistency, you can utilize the `reconcileIssues` parameter to ensure stronger consistency assurances. This operation can be accessed anonymously.
+     *
+     * If the JQL query expression is too large to be encoded as a query parameter, use the [POST](#api-rest-api-3-search-post) version of this resource.
+     *
+     * **[Permissions](#permissions) required:** Issues are included in the response where the user has:
+     *
+     *  *  *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project containing the issue.
+     *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
+     */
+    get: operations["searchAndReconsileIssuesUsingJql"];
+    /**
+     * Search for issues using JQL enhanced search (POST)
+     * @description Searches for issues using [JQL](https://confluence.atlassian.com/x/egORLQ). Recent updates might not be immediately visible in the returned search results. If you need read-after-write consistency, you can utilize the `reconcileIssues` parameter to ensure stronger consistency assurances. This operation can be accessed anonymously.
+     *
+     * **[Permissions](#permissions) required:** Issues are included in the response where the user has:
+     *
+     *  *  *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project containing the issue.
+     *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
+     */
+    post: operations["searchAndReconsileIssuesUsingJqlPost"];
+  };
   "/rest/api/3/securitylevel/{id}": {
     /**
      * Get issue security level
@@ -5481,7 +5567,7 @@ export interface paths {
   "/rest/api/3/universal_avatar/type/{type}/owner/{entityId}": {
     /**
      * Get avatars
-     * @description Returns the system and custom avatars for a project or issue type.
+     * @description Returns the system and custom avatars for a project, issue type or priority.
      *
      * This operation can be accessed anonymously.
      *
@@ -5490,11 +5576,12 @@ export interface paths {
      *  *  for custom project avatars, *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project the avatar belongs to.
      *  *  for custom issue type avatars, *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for at least one project the issue type is used in.
      *  *  for system avatars, none.
+     *  *  for priority avatars, none.
      */
     get: operations["getAvatars"];
     /**
      * Load avatar
-     * @description Loads a custom avatar for a project or issue type.
+     * @description Loads a custom avatar for a project, issue type or priority.
      *
      * Specify the avatar's local file location in the body of the request. Also, include the following headers:
      *
@@ -5522,6 +5609,7 @@ export interface paths {
      *
      *  *  [Update issue type](#api-rest-api-3-issuetype-id-put) to set it as the issue type's displayed avatar.
      *  *  [Set project avatar](#api-rest-api-3-project-projectIdOrKey-avatar-put) to set it as the project's displayed avatar.
+     *  *  [Update priority](#api-rest-api-3-priority-id-put) to set it as the priority's displayed avatar.
      *
      * **[Permissions](#permissions) required:** *Administer Jira* [global permission](https://confluence.atlassian.com/x/x4dKLg).
      */
@@ -5530,7 +5618,7 @@ export interface paths {
   "/rest/api/3/universal_avatar/type/{type}/owner/{owningObjectId}/avatar/{id}": {
     /**
      * Delete avatar
-     * @description Deletes an avatar from a project or issue type.
+     * @description Deletes an avatar from a project, issue type or priority.
      *
      * **[Permissions](#permissions) required:** *Administer Jira* [global permission](https://confluence.atlassian.com/x/x4dKLg).
      */
@@ -5539,7 +5627,7 @@ export interface paths {
   "/rest/api/3/universal_avatar/view/type/{type}": {
     /**
      * Get avatar image by type
-     * @description Returns the default project or issue type avatar image.
+     * @description Returns the default project, issue type or priority avatar image.
      *
      * This operation can be accessed anonymously.
      *
@@ -5550,7 +5638,7 @@ export interface paths {
   "/rest/api/3/universal_avatar/view/type/{type}/avatar/{id}": {
     /**
      * Get avatar image by ID
-     * @description Returns a project or issue type avatar image by ID.
+     * @description Returns a project, issue type or priority avatar image by ID.
      *
      * This operation can be accessed anonymously.
      *
@@ -5559,13 +5647,14 @@ export interface paths {
      *  *  For system avatars, none.
      *  *  For custom project avatars, *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project the avatar belongs to.
      *  *  For custom issue type avatars, *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for at least one project the issue type is used in.
+     *  *  For priority avatars, none.
      */
     get: operations["getAvatarImageByID"];
   };
   "/rest/api/3/universal_avatar/view/type/{type}/owner/{entityId}": {
     /**
      * Get avatar image by owner
-     * @description Returns the avatar image for a project or issue type.
+     * @description Returns the avatar image for a project, issue type or priority.
      *
      * This operation can be accessed anonymously.
      *
@@ -5574,6 +5663,7 @@ export interface paths {
      *  *  For system avatars, none.
      *  *  For custom project avatars, *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project the avatar belongs to.
      *  *  For custom issue type avatars, *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for at least one project the issue type is used in.
+     *  *  For priority avatars, none.
      */
     get: operations["getAvatarImageByOwner"];
   };
@@ -5695,14 +5785,14 @@ export interface paths {
   "/rest/api/3/user/email": {
     /**
      * Get user email
-     * @description Returns a user's email address. This API is only available to apps approved by Atlassian, according to these [guidelines](https://community.developer.atlassian.com/t/guidelines-for-requesting-access-to-email-address/27603).
+     * @description Returns a user's email address regardless of the user\\u2019s profile visibility settings. For Connect apps, this API is only available to apps approved by Atlassian, according to these [guidelines](https://community.developer.atlassian.com/t/guidelines-for-requesting-access-to-email-address/27603)
      */
     get: operations["getUserEmail"];
   };
   "/rest/api/3/user/email/bulk": {
     /**
      * Get user email bulk
-     * @description Returns a user's email address. This API is only available to apps approved by Atlassian, according to these [guidelines](https://community.developer.atlassian.com/t/guidelines-for-requesting-access-to-email-address/27603).
+     * @description Returns a user's email address regardless of the user\\u2019s profile visibility settings. For Connect apps, this API is only available to apps approved by Atlassian, according to these [guidelines](https://community.developer.atlassian.com/t/guidelines-for-requesting-access-to-email-address/27603)
      */
     get: operations["getUserEmailBulk"];
   };
@@ -8170,6 +8260,34 @@ export interface components {
       /** @description The [type of users](https://confluence.atlassian.com/x/lRW3Ng) being counted against your license. */
       userCountDescription?: string;
     };
+    /** @description The approval configuration of a status within a workflow. Applies only to Jira Service Management approvals. */
+    ApprovalConfiguration: ({
+      /**
+       * @description Whether the approval configuration is active.
+       * @enum {string}
+       */
+      active: "true" | "false";
+      /**
+       * @description How the required approval count is calculated. It may be configured to require a specific number of approvals, or approval by a percentage of approvers. If the approvers source field is Approver groups, you can configure how many approvals per group are required for the request to be approved. The number will be the same across all groups.
+       * @enum {string}
+       */
+      conditionType: "number" | "percent" | "numberPerPrincipal";
+      /** @description The number or percentage of approvals required for a request to be approved. If `conditionType` is `number`, the value must be 20 or less. If `conditionType` is `percent`, the value must be 100 or less. */
+      conditionValue: string;
+      /**
+       * @description A list of roles that should be excluded as possible approvers.
+       * @enum {array|null}
+       */
+      exclude?: assignee | reporter | null;
+      /** @description The custom field ID of the "Approvers" or "Approver Groups" field. */
+      fieldId: string;
+      /** @description The custom field ID of the field used to pre-populate the Approver field. Only supports the "Affected Services" field. */
+      prePopulatedFieldId?: string | null;
+      /** @description The numeric ID of the transition to be executed if the request is approved. */
+      transitionApproved: string;
+      /** @description The numeric ID of the transition to be executed if the request is declined. */
+      transitionRejected: string;
+    }) | null;
     ArchiveIssueAsyncRequest: {
       jql?: string;
     };
@@ -8613,6 +8731,43 @@ export interface components {
         [key: string]: components["schemas"]["BulkEditActionError"];
       };
     };
+    BulkFetchIssueRequestBean: {
+      /**
+       * @description Use [expand](em>#expansion) to include additional information about issues in the response. Note that, unlike the majority of instances where `expand` is specified, `expand` is defined as a list of values. The expand options are:
+       *
+       *  *  `renderedFields` Returns field values rendered in HTML format.
+       *  *  `names` Returns the display name of each field.
+       *  *  `schema` Returns the schema describing a field type.
+       *  *  `changelog` Returns a list of recent updates to an issue, sorted by date, starting from the most recent.
+       */
+      expand?: string[];
+      /**
+       * @description A list of fields to return for each issue, use it to retrieve a subset of fields. This parameter accepts a comma-separated list. Expand options include:
+       *
+       *  *  `*all` Returns all fields.
+       *  *  `*navigable` Returns navigable fields.
+       *  *  Any issue field, prefixed with a minus to exclude.
+       *
+       * The default is `*navigable`.
+       *
+       * Examples:
+       *
+       *  *  `summary,comment` Returns the summary and comments fields only.
+       *  *  `-description` Returns all navigable (default) fields except description.
+       *  *  `*all,-comment` Returns all fields except comments.
+       *
+       * Multiple `fields` parameters can be included in a request.
+       *
+       * Note: All navigable fields are returned by default. This differs from [GET issue](#api-rest-api-3-issue-issueIdOrKey-get) where the default is all fields.
+       */
+      fields?: string[];
+      /** @description Reference fields by their key (rather than ID). The default is `false`. */
+      fieldsByKeys?: boolean;
+      /** @description An array of issue IDs or issue keys to fetch. You can mix issue IDs and keys in the same query. */
+      issueIdsOrKeys: string[];
+      /** @description A list of issue property keys of issue properties to be included in the results. A maximum of 5 issue property keys can be specified. */
+      properties?: string[];
+    };
     /** @description A container for the watch status of a list of issues. */
     BulkIssueIsWatching: {
       /** @description The map of issue ID to boolean watch status. */
@@ -8628,6 +8783,13 @@ export interface components {
       filter?: components["schemas"]["IssueFilterForBulkPropertySet"];
       /** @description The value of the property. The value must be a [valid](https://tools.ietf.org/html/rfc4627), non-empty JSON blob. The maximum length is 32768 characters. */
       value?: unknown;
+    };
+    /** @description The list of requested issues & fields. */
+    BulkIssueResults: {
+      /** @description When Jira can't return an issue enumerated in a request due to a retriable error or payload constraint, we'll return the respective issue ID with a corresponding error message. This list is empty when there are no errors Issues which aren't found or that the user doesn't have permission to view won't be returned in this list. */
+      issueErrors?: readonly components["schemas"]["IssueError"][];
+      /** @description The list of issues. */
+      issues?: readonly components["schemas"]["IssueBean"][];
     };
     BulkOperationErrorResponse: {
       errors?: components["schemas"]["ErrorMessage"][];
@@ -9191,13 +9353,18 @@ export interface components {
     };
     /** @description Details of an issue priority. */
     CreatePriorityDetails: {
-      /** @description The description of the priority. */
-      description?: string;
       /**
-       * @description The URL of an icon for the priority. Accepted protocols are HTTP and HTTPS. Built in icons can also be used.
-       * @enum {string}
+       * Format: int64
+       * @description The ID for the avatar for the priority. Either the iconUrl or avatarId must be defined, but not both. This parameter is nullable and will become mandatory once the iconUrl parameter is deprecated.
        */
-      iconUrl?: "/images/icons/priorities/blocker.png" | "/images/icons/priorities/critical.png" | "/images/icons/priorities/high.png" | "/images/icons/priorities/highest.png" | "/images/icons/priorities/low.png" | "/images/icons/priorities/lowest.png" | "/images/icons/priorities/major.png" | "/images/icons/priorities/medium.png" | "/images/icons/priorities/minor.png" | "/images/icons/priorities/trivial.png" | "/images/icons/priorities/blocker_new.png" | "/images/icons/priorities/critical_new.png" | "/images/icons/priorities/high_new.png" | "/images/icons/priorities/highest_new.png" | "/images/icons/priorities/low_new.png" | "/images/icons/priorities/lowest_new.png" | "/images/icons/priorities/major_new.png" | "/images/icons/priorities/medium_new.png" | "/images/icons/priorities/minor_new.png" | "/images/icons/priorities/trivial_new.png";
+      avatarId?: number;
+      /** @description The description of the priority. */
+      description?: string | null;
+      /**
+       * @description The URL of an icon for the priority. Accepted protocols are HTTP and HTTPS. Built in icons can also be used. Either the iconUrl or avatarId must be defined, but not both.
+       * @enum {string|null}
+       */
+      iconUrl?: "/images/icons/priorities/blocker.png" | "/images/icons/priorities/critical.png" | "/images/icons/priorities/high.png" | "/images/icons/priorities/highest.png" | "/images/icons/priorities/low.png" | "/images/icons/priorities/lowest.png" | "/images/icons/priorities/major.png" | "/images/icons/priorities/medium.png" | "/images/icons/priorities/minor.png" | "/images/icons/priorities/trivial.png" | "/images/icons/priorities/blocker_new.png" | "/images/icons/priorities/critical_new.png" | "/images/icons/priorities/high_new.png" | "/images/icons/priorities/highest_new.png" | "/images/icons/priorities/low_new.png" | "/images/icons/priorities/lowest_new.png" | "/images/icons/priorities/major_new.png" | "/images/icons/priorities/medium_new.png" | "/images/icons/priorities/minor_new.png" | "/images/icons/priorities/trivial_new.png" | null;
       /** @description The name of the priority. Must be unique. */
       name: string;
       /** @description The status color of the priority in 3-digit or 6-digit hexadecimal format. */
@@ -9283,7 +9450,7 @@ export interface components {
        * @description A predefined configuration for a project. The type of the `projectTemplateKey` must match with the type of the `projectTypeKey`.
        * @enum {string}
        */
-      projectTemplateKey?: "com.pyxis.greenhopper.jira:gh-simplified-agility-kanban" | "com.pyxis.greenhopper.jira:gh-simplified-agility-scrum" | "com.pyxis.greenhopper.jira:gh-simplified-basic" | "com.pyxis.greenhopper.jira:gh-simplified-kanban-classic" | "com.pyxis.greenhopper.jira:gh-simplified-scrum-classic" | "com.pyxis.greenhopper.jira:gh-cross-team-template" | "com.pyxis.greenhopper.jira:gh-cross-team-planning-template" | "com.atlassian.servicedesk:simplified-it-service-management" | "com.atlassian.servicedesk:simplified-general-service-desk" | "com.atlassian.servicedesk:simplified-general-service-desk-it" | "com.atlassian.servicedesk:simplified-general-service-desk-business" | "com.atlassian.servicedesk:simplified-internal-service-desk" | "com.atlassian.servicedesk:simplified-external-service-desk" | "com.atlassian.servicedesk:simplified-hr-service-desk" | "com.atlassian.servicedesk:simplified-facilities-service-desk" | "com.atlassian.servicedesk:simplified-legal-service-desk" | "com.atlassian.servicedesk:simplified-marketing-service-desk" | "com.atlassian.servicedesk:simplified-finance-service-desk" | "com.atlassian.servicedesk:simplified-analytics-service-desk" | "com.atlassian.servicedesk:simplified-design-service-desk" | "com.atlassian.servicedesk:simplified-sales-service-desk" | "com.atlassian.servicedesk:simplified-halp-service-desk" | "com.atlassian.servicedesk:simplified-blank-project-it" | "com.atlassian.servicedesk:simplified-blank-project-business" | "com.atlassian.servicedesk:next-gen-it-service-desk" | "com.atlassian.servicedesk:next-gen-hr-service-desk" | "com.atlassian.servicedesk:next-gen-legal-service-desk" | "com.atlassian.servicedesk:next-gen-marketing-service-desk" | "com.atlassian.servicedesk:next-gen-facilities-service-desk" | "com.atlassian.servicedesk:next-gen-general-service-desk" | "com.atlassian.servicedesk:next-gen-general-it-service-desk" | "com.atlassian.servicedesk:next-gen-general-business-service-desk" | "com.atlassian.servicedesk:next-gen-analytics-service-desk" | "com.atlassian.servicedesk:next-gen-finance-service-desk" | "com.atlassian.servicedesk:next-gen-design-service-desk" | "com.atlassian.servicedesk:next-gen-sales-service-desk" | "com.atlassian.jira-core-project-templates:jira-core-simplified-content-management" | "com.atlassian.jira-core-project-templates:jira-core-simplified-document-approval" | "com.atlassian.jira-core-project-templates:jira-core-simplified-lead-tracking" | "com.atlassian.jira-core-project-templates:jira-core-simplified-process-control" | "com.atlassian.jira-core-project-templates:jira-core-simplified-procurement" | "com.atlassian.jira-core-project-templates:jira-core-simplified-project-management" | "com.atlassian.jira-core-project-templates:jira-core-simplified-recruitment" | "com.atlassian.jira-core-project-templates:jira-core-simplified-task-";
+      projectTemplateKey?: "com.pyxis.greenhopper.jira:gh-simplified-agility-kanban" | "com.pyxis.greenhopper.jira:gh-simplified-agility-scrum" | "com.pyxis.greenhopper.jira:gh-simplified-basic" | "com.pyxis.greenhopper.jira:gh-simplified-kanban-classic" | "com.pyxis.greenhopper.jira:gh-simplified-scrum-classic" | "com.pyxis.greenhopper.jira:gh-cross-team-template" | "com.pyxis.greenhopper.jira:gh-cross-team-planning-template" | "com.atlassian.servicedesk:simplified-it-service-management" | "com.atlassian.servicedesk:simplified-it-service-management-basic" | "com.atlassian.servicedesk:simplified-general-service-desk" | "com.atlassian.servicedesk:simplified-general-service-desk-it" | "com.atlassian.servicedesk:simplified-general-service-desk-business" | "com.atlassian.servicedesk:simplified-internal-service-desk" | "com.atlassian.servicedesk:simplified-external-service-desk" | "com.atlassian.servicedesk:simplified-hr-service-desk" | "com.atlassian.servicedesk:simplified-facilities-service-desk" | "com.atlassian.servicedesk:simplified-legal-service-desk" | "com.atlassian.servicedesk:simplified-marketing-service-desk" | "com.atlassian.servicedesk:simplified-finance-service-desk" | "com.atlassian.servicedesk:simplified-analytics-service-desk" | "com.atlassian.servicedesk:simplified-design-service-desk" | "com.atlassian.servicedesk:simplified-sales-service-desk" | "com.atlassian.servicedesk:simplified-halp-service-desk" | "com.atlassian.servicedesk:simplified-blank-project-it" | "com.atlassian.servicedesk:simplified-blank-project-business" | "com.atlassian.servicedesk:next-gen-it-service-desk" | "com.atlassian.servicedesk:next-gen-hr-service-desk" | "com.atlassian.servicedesk:next-gen-legal-service-desk" | "com.atlassian.servicedesk:next-gen-marketing-service-desk" | "com.atlassian.servicedesk:next-gen-facilities-service-desk" | "com.atlassian.servicedesk:next-gen-general-service-desk" | "com.atlassian.servicedesk:next-gen-general-it-service-desk" | "com.atlassian.servicedesk:next-gen-general-business-service-desk" | "com.atlassian.servicedesk:next-gen-analytics-service-desk" | "com.atlassian.servicedesk:next-gen-finance-service-desk" | "com.atlassian.servicedesk:next-gen-design-service-desk" | "com.atlassian.servicedesk:next-gen-sales-service-desk" | "com.atlassian.jira-core-project-templates:jira-core-simplified-content-management" | "com.atlassian.jira-core-project-templates:jira-core-simplified-document-approval" | "com.atlassian.jira-core-project-templates:jira-core-simplified-lead-tracking" | "com.atlassian.jira-core-project-templates:jira-core-simplified-process-control" | "com.atlassian.jira-core-project-templates:jira-core-simplified-procurement" | "com.atlassian.jira-core-project-templates:jira-core-simplified-project-management" | "com.atlassian.jira-core-project-templates:jira-core-simplified-recruitment" | "com.atlassian.jira-core-project-templates:jira-core-simplified-task-";
       /**
        * @description The [project type](https://confluence.atlassian.com/x/GwiiLQ#Jiraapplicationsoverview-Productfeaturesandprojecttypes), which defines the application-specific feature set. If you don't specify the project template you have to specify the project type.
        * @enum {string}
@@ -11177,6 +11344,13 @@ export interface components {
         [key: string]: components["schemas"]["JsonNode"];
       };
     };
+    /** @description Describes the error that occurred when retrieving data for a particular issue. */
+    IssueError: {
+      /** @description The error that occurred when fetching this issue. */
+      errorMessage?: string;
+      /** @description The ID of the issue. */
+      id?: string;
+    };
     /** @description Details about an issue event. */
     IssueEvent: {
       /**
@@ -11771,8 +11945,31 @@ export interface components {
       issueUpdates?: components["schemas"]["IssueUpdateDetails"][];
       [key: string]: unknown;
     };
+    /** @description The description of the page of issues loaded by the provided JQL query.This bean will be replacing IssuesJqlMetaDataBean bean as part of new `evaluate` endpoint */
+    JExpEvaluateIssuesJqlMetaDataBean: {
+      /** @description Next Page token for the next page of issues. */
+      nextPageToken: string;
+    };
+    /** @description Meta data describing the `issues` context variable.This bean will be replacing IssuesMetaBean bean as part of new `evaluate` endpoint */
+    JExpEvaluateIssuesMetaBean: {
+      jql?: components["schemas"]["JExpEvaluateIssuesJqlMetaDataBean"];
+    };
+    /** @description The result of evaluating a Jira expression.This bean will be replacing `JiraExpressionResultBean` bean as part of new evaluate endpoint */
+    JExpEvaluateJiraExpressionResultBean: {
+      /** @description Contains various characteristics of the performed expression evaluation. */
+      meta?: components["schemas"]["JExpEvaluateMetaDataBean"];
+      /** @description The value of the evaluated expression. It may be a primitive JSON value or a Jira REST API object. (Some expressions do not produce any meaningful results—for example, an expression that returns a lambda function—if that's the case a simple string representation is returned. These string representations should not be relied upon and may change without notice.) */
+      value: unknown;
+    };
+    /** @description Contains information about the expression evaluation. This bean will be replacing `JiraExpressionEvaluationMetaDataBean` bean as part of new `evaluate` endpoint */
+    JExpEvaluateMetaDataBean: {
+      /** @description Contains information about the expression complexity. For example, the number of steps it took to evaluate the expression. */
+      complexity?: components["schemas"]["JiraExpressionsComplexityBean"];
+      /** @description Contains information about the `issues` variable in the context. For example, is the issues were loaded with JQL, information about the page will be included here. */
+      issues?: components["schemas"]["JExpEvaluateIssuesMetaBean"];
+    };
     JQLCountRequestBean: {
-      /** @description A [JQL](https://confluence.atlassian.com/x/egORLQ) expression. Requires where clause to be present. */
+      /** @description A [JQL](https://confluence.atlassian.com/x/egORLQ) expression. For performance reasons, this field requires a bounded query. A bounded query is a query with a search restriction. */
       jql?: string;
     };
     JQLCountResultsBean: {
@@ -11802,6 +11999,23 @@ export interface components {
       visibleFieldNames?: components["schemas"]["FieldReferenceData"][];
       /** @description List of functions usable in JQL queries. */
       visibleFunctionNames?: components["schemas"]["FunctionReferenceData"][];
+    };
+    /** @description The JQL specifying the issues available in the evaluated Jira expression under the `issues` context variable. This bean will be replacing `JexpIssues` bean as part of new `evaluate` endpoint */
+    JexpEvaluateCtxIssues: {
+      /** @description The JQL query that specifies the set of issues available in the Jira expression. */
+      jql?: components["schemas"]["JexpEvaluateCtxJqlIssues"];
+    };
+    /** @description The JQL specifying the issues available in the evaluated Jira expression under the `issues` context variable. Not all issues returned by the JQL query are loaded, only those described by the `nextPageToken` and `maxResults` properties. This bean will be replacing JexpJqlIssues bean as part of new `evaluate` endpoint */
+    JexpEvaluateCtxJqlIssues: {
+      /**
+       * Format: int32
+       * @description The maximum number of issues to return from the JQL query. max results value considered may be lower than the number specific here.
+       */
+      maxResults?: number;
+      /** @description The token for a page to fetch that is not the first page. The first page has a `nextPageToken` of `null`. Use the `nextPageToken` to fetch the next page of issues. */
+      nextPageToken?: string;
+      /** @description The JQL query, required to be bounded. */
+      query?: string;
     };
     /** @description The JQL specifying the issues available in the evaluated Jira expression under the `issues` context variable. */
     JexpIssues: {
@@ -11928,6 +12142,53 @@ export interface components {
     JiraExpressionEvalRequestBean: {
       /** @description The context in which the Jira expression is evaluated. */
       context?: components["schemas"]["JiraExpressionEvalContextBean"];
+      /**
+       * @description The Jira expression to evaluate.
+       * @example { key: issue.key, type: issue.issueType.name, links: issue.links.map(link => link.linkedIssue.id) }
+       */
+      expression: string;
+    };
+    JiraExpressionEvaluateContextBean: {
+      /**
+       * Format: int64
+       * @description The ID of the board that is available under the `board` variable when evaluating the expression.
+       */
+      board?: number;
+      /**
+       * @description Custom context variables and their types. These variable types are available for use in a custom context:
+       *
+       *  *  `user`: A [user](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#user) specified as an Atlassian account ID.
+       *  *  `issue`: An [issue](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#issue) specified by ID or key. All the fields of the issue object are available in the Jira expression.
+       *  *  `json`: A JSON object containing custom content.
+       *  *  `list`: A JSON list of `user`, `issue`, or `json` variable types.
+       */
+      custom?: components["schemas"]["CustomContextVariable"][];
+      /**
+       * Format: int64
+       * @description The ID of the customer request that is available under the `customerRequest` variable when evaluating the expression. This is the same as the ID of the underlying Jira issue, but the customer request context variable will have a different type.
+       */
+      customerRequest?: number;
+      /** @description The issue that is available under the `issue` variable when evaluating the expression. */
+      issue?: components["schemas"]["IdOrKeyBean"];
+      /** @description The collection of issues that is available under the `issues` variable when evaluating the expression. */
+      issues?: components["schemas"]["JexpEvaluateCtxIssues"];
+      /** @description The project that is available under the `project` variable when evaluating the expression. */
+      project?: components["schemas"]["IdOrKeyBean"];
+      /**
+       * Format: int64
+       * @description The ID of the service desk that is available under the `serviceDesk` variable when evaluating the expression.
+       */
+      serviceDesk?: number;
+      /**
+       * Format: int64
+       * @description The ID of the sprint that is available under the `sprint` variable when evaluating the expression.
+       */
+      sprint?: number;
+    };
+    /** @description The request to evaluate a Jira expression. This bean will be replacing `JiraExpressionEvaluateRequest` as part of new `evaluate` endpoint */
+    JiraExpressionEvaluateRequestBean: {
+      /** @description The context in which the Jira expression is evaluated. */
+      context?: components["schemas"]["JiraExpressionEvaluateContextBean"];
       /**
        * @description The Jira expression to evaluate.
        * @example { key: issue.key, type: issue.issueType.name, links: issue.links.map(link => link.linkedIssue.id) }
@@ -14960,6 +15221,11 @@ export interface components {
     };
     /** @description An issue priority. */
     Priority: {
+      /**
+       * Format: int64
+       * @description The avatarId of the avatar for the issue priority. This parameter is nullable and when set, this avatar references the universal avatar APIs.
+       */
+      avatarId?: number;
       /** @description The description of the issue priority. */
       description?: string;
       /** @description The URL of the icon for the issue priority. */
@@ -15942,6 +16208,73 @@ export interface components {
       /** @description The name of the screen tab. The maximum length is 255 characters. */
       name: string;
     };
+    SearchAndReconcileRequestBean: {
+      /**
+       * @description Use [expand](em>#expansion) to include additional information about issues in the response. Note that, unlike the majority of instances where `expand` is specified, `expand` is defined as a list of values. The expand options are:
+       *
+       *  *  `renderedFields` Returns field values rendered in HTML format.
+       *  *  `names` Returns the display name of each field.
+       *  *  `schema` Returns the schema describing a field type.
+       *  *  `changelog` Returns a list of recent updates to an issue, sorted by date, starting from the most recent.
+       */
+      expand?: string;
+      /**
+       * @description A list of fields to return for each issue. Use it to retrieve a subset of fields. This parameter accepts a comma-separated list. Expand options include:
+       *
+       *  *  `*all` Returns all fields.
+       *  *  `*navigable` Returns navigable fields.
+       *  *  `id` Returns only issue IDs.
+       *  *  Any issue field, prefixed with a dash to exclude.
+       *
+       * The default is `id`.
+       *
+       * Examples:
+       *
+       *  *  `summary,comment` Returns the summary and comments fields only.
+       *  *  `*all,-comment` Returns all fields except comments.
+       *
+       * Multiple `fields` parameters can be included in a request.
+       *
+       * Note: By default, this resource returns IDs only. This differs from [GET issue](#api-rest-api-3-issue-issueIdOrKey-get) where the default is all fields.
+       */
+      fields?: string[];
+      /** @description Reference fields by their key (rather than ID). The default is `false`. */
+      fieldsByKeys?: boolean;
+      /**
+       * @description A [JQL](https://confluence.atlassian.com/x/egORLQ) expression. For performance reasons, this field requires a bounded query. A bounded query is a query with a search restriction.
+       *
+       *  *  Example of an unbounded query: `order by key desc`.
+       *  *  Example of a bounded query: `assignee = currentUser() order by key`.
+       */
+      jql?: string;
+      /**
+       * Format: int32
+       * @description The maximum number of items to return. Depending on search criteria, real number of items returned may be smaller.
+       * @default 50
+       */
+      maxResults?: number;
+      /** @description The continuation token to fetch the next page. This token is provided by the response of this endpoint. */
+      nextPageToken?: string;
+      /** @description A list of up to 5 issue properties to include in the results. This parameter accepts a comma-separated list. */
+      properties?: string[];
+      /** @description Strong consistency issue ids to be reconciled with search results. Accepts max 50 ids. All issues must exist. */
+      reconcileIssues?: number[];
+    };
+    /** @description The result of a JQL search with issues reconsilation. */
+    SearchAndReconcileResults: {
+      /** @description The list of issues found by the search or reconsiliation. */
+      issues?: readonly components["schemas"]["IssueBean"][];
+      /** @description The ID and name of each field in the search results. */
+      names?: {
+        [key: string]: string;
+      };
+      /** @description Continuation token to fetch the next page. If this result represents the last or the only page this token will be null. This token will expire in 7 days. */
+      nextPageToken?: string;
+      /** @description The schema describing the field types in the search results. */
+      schema?: {
+        [key: string]: components["schemas"]["JsonTypeBean"];
+      };
+    };
     /** @description Details of how to filter and list search auto complete information. */
     SearchAutoCompleteFilter: {
       /**
@@ -16481,6 +16814,7 @@ export interface components {
     };
     /** @description The statuses associated with this workflow. */
     StatusLayoutUpdate: {
+      approvalConfiguration?: components["schemas"]["ApprovalConfiguration"];
       layout?: components["schemas"]["WorkflowLayout"];
       /** @description The properties for this status layout. */
       properties: {
@@ -16951,13 +17285,17 @@ export interface components {
       isAvailable?: boolean;
       /** @description The issue type ID of the context. Null is treated as a wildcard, meaning the UI modification will be applied to all issue types. Each UI modification context can have a maximum of one wildcard. */
       issueTypeId?: string;
+      /** @description The portal ID of the context. */
+      portalId?: string;
       /** @description The project ID of the context. Null is treated as a wildcard, meaning the UI modification will be applied to all projects. Each UI modification context can have a maximum of one wildcard. */
       projectId?: string;
+      /** @description The request type ID of the context. */
+      requestTypeId?: string;
       /**
        * @description The view type of the context. Only `GIC`(Global Issue Create) and `IssueView` are supported. Null is treated as a wildcard, meaning the UI modification will be applied to all view types. Each UI modification context can have a maximum of one wildcard.
        * @enum {string}
        */
-      viewType?: "GIC" | "IssueView";
+      viewType?: "GIC" | "IssueView" | "JSMRequestCreate";
     };
     /** @description The details of a UI modification. */
     UiModificationDetails: {
@@ -17071,17 +17409,22 @@ export interface components {
     };
     /** @description Details of an issue priority. */
     UpdatePriorityDetails: {
-      /** @description The description of the priority. */
-      description?: string;
       /**
-       * @description The URL of an icon for the priority. Accepted protocols are HTTP and HTTPS. Built in icons can also be used.
-       * @enum {string}
+       * Format: int64
+       * @description The ID for the avatar for the priority. This parameter is nullable and both iconUrl and avatarId cannot be defined.
        */
-      iconUrl?: "/images/icons/priorities/blocker.png" | "/images/icons/priorities/critical.png" | "/images/icons/priorities/high.png" | "/images/icons/priorities/highest.png" | "/images/icons/priorities/low.png" | "/images/icons/priorities/lowest.png" | "/images/icons/priorities/major.png" | "/images/icons/priorities/medium.png" | "/images/icons/priorities/minor.png" | "/images/icons/priorities/trivial.png" | "/images/icons/priorities/blocker_new.png" | "/images/icons/priorities/critical_new.png" | "/images/icons/priorities/high_new.png" | "/images/icons/priorities/highest_new.png" | "/images/icons/priorities/low_new.png" | "/images/icons/priorities/lowest_new.png" | "/images/icons/priorities/major_new.png" | "/images/icons/priorities/medium_new.png" | "/images/icons/priorities/minor_new.png" | "/images/icons/priorities/trivial_new.png";
+      avatarId?: number;
+      /** @description The description of the priority. */
+      description?: string | null;
+      /**
+       * @description The URL of an icon for the priority. Accepted protocols are HTTP and HTTPS. Built in icons can also be used. Both iconUrl and avatarId cannot be defined.
+       * @enum {string|null}
+       */
+      iconUrl?: "/images/icons/priorities/blocker.png" | "/images/icons/priorities/critical.png" | "/images/icons/priorities/high.png" | "/images/icons/priorities/highest.png" | "/images/icons/priorities/low.png" | "/images/icons/priorities/lowest.png" | "/images/icons/priorities/major.png" | "/images/icons/priorities/medium.png" | "/images/icons/priorities/minor.png" | "/images/icons/priorities/trivial.png" | "/images/icons/priorities/blocker_new.png" | "/images/icons/priorities/critical_new.png" | "/images/icons/priorities/high_new.png" | "/images/icons/priorities/highest_new.png" | "/images/icons/priorities/low_new.png" | "/images/icons/priorities/lowest_new.png" | "/images/icons/priorities/major_new.png" | "/images/icons/priorities/medium_new.png" | "/images/icons/priorities/minor_new.png" | "/images/icons/priorities/trivial_new.png" | null;
       /** @description The name of the priority. Must be unique. */
-      name?: string;
+      name?: string | null;
       /** @description The status color of the priority in 3-digit or 6-digit hexadecimal format. */
-      statusColor?: string;
+      statusColor?: string | null;
       [key: string]: unknown;
     };
     /** @description Details of a priority scheme. */
@@ -17929,6 +18272,7 @@ export interface components {
     };
     /** @description The statuses referenced in the workflow. */
     WorkflowReferenceStatus: {
+      approvalConfiguration?: components["schemas"]["ApprovalConfiguration"];
       /** @description Indicates if the status is deprecated. */
       deprecated?: boolean;
       layout?: components["schemas"]["WorkflowStatusLayout"];
@@ -19530,7 +19874,7 @@ export interface operations {
   };
   /**
    * Get system avatars by type
-   * @description Returns a list of system avatar details by owner type, where the owner types are issue type, project, or user.
+   * @description Returns a list of system avatar details by owner type, where the owner types are issue type, project, user or priority.
    *
    * This operation can be accessed anonymously.
    *
@@ -19540,7 +19884,7 @@ export interface operations {
     parameters: {
       path: {
         /** @description The avatar type. */
-        type: "issuetype" | "project" | "user";
+        type: "issuetype" | "project" | "user" | "priority";
       };
     };
     responses: {
@@ -21775,6 +22119,135 @@ export interface operations {
        *      *  invalid data is provided, such as a request including issue ID and key.
        *      *  the expression is invalid and can not be parsed.
        *  *  evaluation fails at runtime. This may happen for various reasons. For example, accessing a property on a null object (such as the expression `issue.id` where `issue` is `null`). In this case an error message is provided.
+       */
+      400: {
+        content: {
+          "application/json": components["schemas"]["ErrorCollection"];
+        };
+      };
+      /** @description Returned if the authentication credentials are incorrect or missing. */
+      401: {
+        content: never;
+      };
+      /** @description Returned if any object provided in the request context is not found or the user does not have permission to view it. */
+      404: {
+        content: {
+          "application/json": components["schemas"]["ErrorCollection"];
+        };
+      };
+    };
+  };
+  /**
+   * Evaluate Jira expression using enhanced search API
+   * @description Evaluates a Jira expression and returns its value. The difference between this and `eval` is that this endpoint uses the enhanced search API when evaluating JQL queries. This API is eventually consistent, unlike the strongly consistent `eval` API. This allows for better performance and scalability. In addition, this API's response for JQL evaluation is based on a scrolling view (backed by a `nextPageToken`) instead of a paginated view (backed by `startAt` and `totalCount`).
+   *
+   * This resource can be used to test Jira expressions that you plan to use elsewhere, or to fetch data in a flexible way. Consult the [Jira expressions documentation](https://developer.atlassian.com/cloud/jira/platform/jira-expressions/) for more details.
+   *
+   * #### Context variables ####
+   *
+   * The following context variables are available to Jira expressions evaluated by this resource. Their presence depends on various factors; usually you need to manually request them in the context object sent in the payload, but some of them are added automatically under certain conditions.
+   *
+   *  *  `user` ([User](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#user)): The current user. Always available and equal to `null` if the request is anonymous.
+   *  *  `app` ([App](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#app)): The [Connect app](https://developer.atlassian.com/cloud/jira/platform/index/#connect-apps) that made the request. Available only for authenticated requests made by Connect apps (read more here: [Authentication for Connect apps](https://developer.atlassian.com/cloud/jira/platform/security-for-connect-apps/)).
+   *  *  `issue` ([Issue](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#issue)): The current issue. Available only when the issue is provided in the request context object.
+   *  *  `issues` ([List](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#list) of [Issues](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#issue)): A collection of issues matching a JQL query. Available only when JQL is provided in the request context object.
+   *  *  `project` ([Project](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#project)): The current project. Available only when the project is provided in the request context object.
+   *  *  `sprint` ([Sprint](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#sprint)): The current sprint. Available only when the sprint is provided in the request context object.
+   *  *  `board` ([Board](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#board)): The current board. Available only when the board is provided in the request context object.
+   *  *  `serviceDesk` ([ServiceDesk](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#servicedesk)): The current service desk. Available only when the service desk is provided in the request context object.
+   *  *  `customerRequest` ([CustomerRequest](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#customerrequest)): The current customer request. Available only when the customer request is provided in the request context object.
+   *
+   * In addition, you can pass custom context variables along with their types. You can then access them from the Jira expression by key. You can use the following variables in a custom context:
+   *
+   *  *  `user`: A [user](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#user) specified as an Atlassian account ID.
+   *  *  `issue`: An [issue](https://developer.atlassian.com/cloud/jira/platform/jira-expressions-type-reference#issue) specified by ID or key. All the fields of the issue object are available in the Jira expression.
+   *  *  `json`: A JSON object containing custom content.
+   *  *  `list`: A JSON list of `user`, `issue`, or `json` variable types.
+   *
+   * This operation can be accessed anonymously.
+   *
+   * **[Permissions](#permissions) required**: None. However, an expression may return different results for different users depending on their permissions. For example, different users may see different comments on the same issue.
+   * Permission to access Jira Software is required to access Jira Software context variables (`board` and `sprint`) or fields (for example, `issue.sprint`).
+   */
+  evaluateJSISJiraExpression: {
+    parameters: {
+      query?: {
+        /** @description Use [expand](#expansion) to include additional information in the response. This parameter accepts `meta.complexity` that returns information about the expression complexity. For example, the number of expensive operations used by the expression and how close the expression is to reaching the [complexity limit](https://developer.atlassian.com/cloud/jira/platform/jira-expressions/#restrictions). Useful when designing and debugging your expressions. */
+        expand?: string;
+      };
+    };
+    /** @description The Jira expression and the evaluation context. */
+    requestBody: {
+      content: {
+        /**
+         * @example {
+         *   "context": {
+         *     "board": 10100,
+         *     "custom": {
+         *       "config": {
+         *         "type": "json",
+         *         "value": {
+         *           "userId": "10002"
+         *         }
+         *       },
+         *       "issuesList": [
+         *         {
+         *           "key": "ACJIRA-1471",
+         *           "type": "issue"
+         *         },
+         *         {
+         *           "id": 100001,
+         *           "type": "issue"
+         *         }
+         *       ],
+         *       "myUser": {
+         *         "accountId": "100001",
+         *         "type": "user"
+         *       },
+         *       "nullField": {
+         *         "type": "json"
+         *       }
+         *     },
+         *     "customerRequest": 1450,
+         *     "issue": {
+         *       "key": "ACJIRA-1470"
+         *     },
+         *     "issues": {
+         *       "jql": {
+         *         "maxResults": 100,
+         *         "nextPageToken": "EgQIlMIC",
+         *         "query": "project = HSP"
+         *       }
+         *     },
+         *     "project": {
+         *       "key": "ACJIRA"
+         *     },
+         *     "serviceDesk": 10023,
+         *     "sprint": 10001
+         *   },
+         *   "expression": "{ key: issue.key, type: issue.issueType.name, links: issue.links.map(link => link.linkedIssue.id), listCustomVariable: issuesList.includes(issue), customVariables: myUser.accountId == config.userId}"
+         * }
+         */
+        "application/json": components["schemas"]["JiraExpressionEvaluateRequestBean"];
+      };
+    };
+    responses: {
+      /** @description Returned if the evaluation results in a value. The result is a JSON primitive value, list, or object. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["JExpEvaluateJiraExpressionResultBean"];
+        };
+      };
+      /**
+       * @description Returned if:
+       *
+       *  *  the request is invalid, that is:
+       *
+       *      *  invalid data is provided, such as a request including issue ID and key.
+       *      *  the expression is invalid and can not be parsed.
+       *  *  evaluation fails at runtime. This may happen for various reasons. For example, accessing a property on a null object (such as the expression `issue.id` where `issue` is `null`). In this case an error message is provided.
+       *  *  If jql is unbounded or empty.
+       *  *  If nextPageToken is invalid
        */
       400: {
         content: {
@@ -26646,6 +27119,64 @@ export interface operations {
     };
   };
   /**
+   * Bulk fetch issues
+   * @description Returns the details for a set of requested issues. You can request up to 100 issues.
+   *
+   * Each issue is identified by its ID or key, however, if the identifier doesn't match an issue, a case-insensitive search and check for moved issues is performed. If a matching issue is found its details are returned, a 302 or other redirect is **not** returned.
+   *
+   * Issues will be returned in ascending `id` order. If there are errors, Jira will return a list of issues which couldn't be fetched along with error messages.
+   *
+   * This operation can be accessed anonymously.
+   *
+   * **[Permissions](#permissions) required:** Issues are included in the response where the user has:
+   *
+   *  *  *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project that the issue is in.
+   *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
+   */
+  bulkFetchIssues: {
+    /** @description A JSON object containing the information about which issues and fields to fetch. */
+    requestBody: {
+      content: {
+        /**
+         * @example {
+         *   "expand": [
+         *     "names"
+         *   ],
+         *   "fields": [
+         *     "summary",
+         *     "project",
+         *     "assignee"
+         *   ],
+         *   "fieldsByKeys": false,
+         *   "issueIdsOrKeys": [
+         *     "EX-1",
+         *     "EX-2",
+         *     "10005"
+         *   ],
+         *   "properties": []
+         * }
+         */
+        "application/json": components["schemas"]["BulkFetchIssueRequestBean"];
+      };
+    };
+    responses: {
+      /** @description Returned if the request is successful. A response may contain both successful issues and issue errors. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["BulkIssueResults"];
+        };
+      };
+      /** @description Returned if no issue IDs/keys were present, or more than 100 issue IDs/keys were requested. */
+      400: {
+        content: never;
+      };
+      /** @description Returned if the authentication credentials are incorrect or missing. */
+      401: {
+        content: never;
+      };
+    };
+  };
+  /**
    * Get create issue metadata
    * @deprecated
    * @description Returns details of projects, issue types within projects, and, when requested, the create screen fields for each issue type for the user. Use the information to populate the requests in [ Create issue](#api-rest-api-3-issue-post) and [Create issues](#api-rest-api-3-issue-bulk-post).
@@ -29579,6 +30110,7 @@ export interface operations {
    *  *  You can't move worklogs containing an attachment.
    *  *  You can't move worklogs restricted by project roles.
    *  *  No notifications will be sent for moved worklogs.
+   *  *  No webhooks or events will be sent for moved worklogs.
    *  *  No issue history will be recorded for moved worklogs.
    *  *  Time tracking will not be updated for the source and destination issues.
    *
@@ -35132,7 +35664,10 @@ export interface operations {
   };
   /**
    * Create priority
+   * @deprecated
    * @description Creates an issue priority.
+   *
+   * Deprecation applies to iconUrl param in request body which will be sunset on 16th Mar 2025. For more details refer to [changelog](https://developer.atlassian.com/changelog/#CHANGE-1525).
    *
    * **[Permissions](#permissions) required:** *Administer Jira* [global permission](https://confluence.atlassian.com/x/x4dKLg).
    */
@@ -35358,7 +35893,12 @@ export interface operations {
   };
   /**
    * Update priority
+   * @deprecated
    * @description Updates an issue priority.
+   *
+   * At least one request body parameter must be defined.
+   *
+   * Deprecation applies to iconUrl param in request body which will be sunset on 16th Mar 2025. For more details refer to [changelog](https://developer.atlassian.com/changelog/#CHANGE-1525).
    *
    * **[Permissions](#permissions) required:** *Administer Jira* [global permission](https://confluence.atlassian.com/x/x4dKLg).
    */
@@ -39947,7 +40487,7 @@ export interface operations {
       400: {
         content: never;
       };
-      /** @description Returned if the authentication credentials are incorrect or missing. */
+      /** @description Returned if the authentication credentials are incorrect. */
       401: {
         content: never;
       };
@@ -40002,7 +40542,7 @@ export interface operations {
       400: {
         content: never;
       };
-      /** @description Returned if the authentication credentials are incorrect or missing. */
+      /** @description Returned if the authentication credentials are incorrect. */
       401: {
         content: never;
       };
@@ -40025,7 +40565,7 @@ export interface operations {
       content: {
         /**
          * @example {
-         *   "count": 153
+         *   "jql": "project = HSP"
          * }
          */
         "application/json": components["schemas"]["JQLCountRequestBean"];
@@ -40088,6 +40628,80 @@ export interface operations {
       };
       /** @description Returned if the authentication credentials are incorrect. */
       401: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Search for issues using JQL enhanced search (GET)
+   * @description Searches for issues using [JQL](https://confluence.atlassian.com/x/egORLQ). Recent updates might not be immediately visible in the returned search results. If you need read-after-write consistency, you can utilize the `reconcileIssues` parameter to ensure stronger consistency assurances. This operation can be accessed anonymously.
+   *
+   * If the JQL query expression is too large to be encoded as a query parameter, use the [POST](#api-rest-api-3-search-post) version of this resource.
+   *
+   * **[Permissions](#permissions) required:** Issues are included in the response where the user has:
+   *
+   *  *  *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project containing the issue.
+   *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
+   */
+  searchAndReconsileIssuesUsingJql: {
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SearchAndReconcileRequestBean"];
+      };
+    };
+    responses: {
+      /** @description Returned if the request is successful. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["SearchAndReconcileResults"];
+        };
+      };
+      /** @description Returned if the search request is invalid */
+      400: {
+        content: never;
+      };
+      /** @description Returned if the authentication credentials are incorrect or missing. */
+      401: {
+        content: never;
+      };
+      /** @description Returned if any of the ids provided in reconcileIssues were not found */
+      404: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Search for issues using JQL enhanced search (POST)
+   * @description Searches for issues using [JQL](https://confluence.atlassian.com/x/egORLQ). Recent updates might not be immediately visible in the returned search results. If you need read-after-write consistency, you can utilize the `reconcileIssues` parameter to ensure stronger consistency assurances. This operation can be accessed anonymously.
+   *
+   * **[Permissions](#permissions) required:** Issues are included in the response where the user has:
+   *
+   *  *  *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project containing the issue.
+   *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
+   */
+  searchAndReconsileIssuesUsingJqlPost: {
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SearchAndReconcileRequestBean"];
+      };
+    };
+    responses: {
+      /** @description Returned if the request is successful. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["SearchAndReconcileResults"];
+        };
+      };
+      /** @description Returned if the search request is invalid */
+      400: {
+        content: never;
+      };
+      /** @description Returned if the authentication credentials are incorrect or missing. */
+      401: {
+        content: never;
+      };
+      /** @description Returned if any of the ids provided in reconcileIssues were not found */
+      404: {
         content: never;
       };
     };
@@ -40730,17 +41344,23 @@ export interface operations {
          *   "contexts": [
          *     {
          *       "issueTypeId": "10000",
+         *       "portalId": "",
          *       "projectId": "10000",
+         *       "requestTypeId": "",
          *       "viewType": "GIC"
          *     },
          *     {
          *       "issueTypeId": "10001",
+         *       "portalId": "",
          *       "projectId": "10000",
+         *       "requestTypeId": "",
          *       "viewType": "IssueView"
          *     },
          *     {
          *       "issueTypeId": "10002",
+         *       "portalId": "",
          *       "projectId": "10000",
+         *       "requestTypeId": "",
          *       "viewType": null
          *     }
          *   ],
@@ -40807,12 +41427,16 @@ export interface operations {
          *   "contexts": [
          *     {
          *       "issueTypeId": "10000",
+         *       "portalId": "",
          *       "projectId": "10000",
+         *       "requestTypeId": "",
          *       "viewType": "GIC"
          *     },
          *     {
          *       "issueTypeId": "10001",
+         *       "portalId": "",
          *       "projectId": "10000",
+         *       "requestTypeId": "",
          *       "viewType": "IssueView"
          *     }
          *   ],
@@ -40888,7 +41512,7 @@ export interface operations {
   };
   /**
    * Get avatars
-   * @description Returns the system and custom avatars for a project or issue type.
+   * @description Returns the system and custom avatars for a project, issue type or priority.
    *
    * This operation can be accessed anonymously.
    *
@@ -40897,12 +41521,13 @@ export interface operations {
    *  *  for custom project avatars, *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project the avatar belongs to.
    *  *  for custom issue type avatars, *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for at least one project the issue type is used in.
    *  *  for system avatars, none.
+   *  *  for priority avatars, none.
    */
   getAvatars: {
     parameters: {
       path: {
         /** @description The avatar type. */
-        type: "project" | "issuetype";
+        type: "project" | "issuetype" | "priority";
         /** @description The ID of the item the avatar is associated with. */
         entityId: string;
       };
@@ -40926,7 +41551,7 @@ export interface operations {
   };
   /**
    * Load avatar
-   * @description Loads a custom avatar for a project or issue type.
+   * @description Loads a custom avatar for a project, issue type or priority.
    *
    * Specify the avatar's local file location in the body of the request. Also, include the following headers:
    *
@@ -40954,6 +41579,7 @@ export interface operations {
    *
    *  *  [Update issue type](#api-rest-api-3-issuetype-id-put) to set it as the issue type's displayed avatar.
    *  *  [Set project avatar](#api-rest-api-3-project-projectIdOrKey-avatar-put) to set it as the project's displayed avatar.
+   *  *  [Update priority](#api-rest-api-3-priority-id-put) to set it as the priority's displayed avatar.
    *
    * **[Permissions](#permissions) required:** *Administer Jira* [global permission](https://confluence.atlassian.com/x/x4dKLg).
    */
@@ -40969,7 +41595,7 @@ export interface operations {
       };
       path: {
         /** @description The avatar type. */
-        type: "project" | "issuetype";
+        type: "project" | "issuetype" | "priority";
         /** @description The ID of the item the avatar is associated with. */
         entityId: string;
       };
@@ -41012,7 +41638,7 @@ export interface operations {
   };
   /**
    * Delete avatar
-   * @description Deletes an avatar from a project or issue type.
+   * @description Deletes an avatar from a project, issue type or priority.
    *
    * **[Permissions](#permissions) required:** *Administer Jira* [global permission](https://confluence.atlassian.com/x/x4dKLg).
    */
@@ -41020,7 +41646,7 @@ export interface operations {
     parameters: {
       path: {
         /** @description The avatar type. */
-        type: "project" | "issuetype";
+        type: "project" | "issuetype" | "priority";
         /** @description The ID of the item the avatar is associated with. */
         owningObjectId: string;
         /** @description The ID of the avatar. */
@@ -41048,7 +41674,7 @@ export interface operations {
   };
   /**
    * Get avatar image by type
-   * @description Returns the default project or issue type avatar image.
+   * @description Returns the default project, issue type or priority avatar image.
    *
    * This operation can be accessed anonymously.
    *
@@ -41064,7 +41690,7 @@ export interface operations {
       };
       path: {
         /** @description The icon type of the avatar. */
-        type: "issuetype" | "project";
+        type: "issuetype" | "project" | "priority";
       };
     };
     responses: {
@@ -41108,7 +41734,7 @@ export interface operations {
   };
   /**
    * Get avatar image by ID
-   * @description Returns a project or issue type avatar image by ID.
+   * @description Returns a project, issue type or priority avatar image by ID.
    *
    * This operation can be accessed anonymously.
    *
@@ -41117,6 +41743,7 @@ export interface operations {
    *  *  For system avatars, none.
    *  *  For custom project avatars, *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project the avatar belongs to.
    *  *  For custom issue type avatars, *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for at least one project the issue type is used in.
+   *  *  For priority avatars, none.
    */
   getAvatarImageByID: {
     parameters: {
@@ -41128,7 +41755,7 @@ export interface operations {
       };
       path: {
         /** @description The icon type of the avatar. */
-        type: "issuetype" | "project";
+        type: "issuetype" | "project" | "priority";
         /** @description The ID of the avatar. */
         id: number;
       };
@@ -41183,7 +41810,7 @@ export interface operations {
   };
   /**
    * Get avatar image by owner
-   * @description Returns the avatar image for a project or issue type.
+   * @description Returns the avatar image for a project, issue type or priority.
    *
    * This operation can be accessed anonymously.
    *
@@ -41192,6 +41819,7 @@ export interface operations {
    *  *  For system avatars, none.
    *  *  For custom project avatars, *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project the avatar belongs to.
    *  *  For custom issue type avatars, *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for at least one project the issue type is used in.
+   *  *  For priority avatars, none.
    */
   getAvatarImageByOwner: {
     parameters: {
@@ -41203,7 +41831,7 @@ export interface operations {
       };
       path: {
         /** @description The icon type of the avatar. */
-        type: "issuetype" | "project";
+        type: "issuetype" | "project" | "priority";
         /** @description The ID of the project or issue type the avatar belongs to. */
         entityId: string;
       };
@@ -41719,7 +42347,7 @@ export interface operations {
   };
   /**
    * Get user email
-   * @description Returns a user's email address. This API is only available to apps approved by Atlassian, according to these [guidelines](https://community.developer.atlassian.com/t/guidelines-for-requesting-access-to-email-address/27603).
+   * @description Returns a user's email address regardless of the user\\u2019s profile visibility settings. For Connect apps, this API is only available to apps approved by Atlassian, according to these [guidelines](https://community.developer.atlassian.com/t/guidelines-for-requesting-access-to-email-address/27603)
    */
   getUserEmail: {
     parameters: {
@@ -41755,7 +42383,7 @@ export interface operations {
   };
   /**
    * Get user email bulk
-   * @description Returns a user's email address. This API is only available to apps approved by Atlassian, according to these [guidelines](https://community.developer.atlassian.com/t/guidelines-for-requesting-access-to-email-address/27603).
+   * @description Returns a user's email address regardless of the user\\u2019s profile visibility settings. For Connect apps, this API is only available to apps approved by Atlassian, according to these [guidelines](https://community.developer.atlassian.com/t/guidelines-for-requesting-access-to-email-address/27603)
    */
   getUserEmailBulk: {
     parameters: {
@@ -44841,6 +45469,8 @@ export interface operations {
         expand?: string;
         /** @description Return the new fields (`toStatusReference`/`links`) instead of the deprecated fields (`to`/`from`) for workflow transition port mappings. */
         useTransitionLinksFormat?: boolean;
+        /** @description Return the new field `approvalConfiguration` instead of the deprecated status properties for approval configuration. */
+        useApprovalConfiguration?: boolean;
       };
     };
     requestBody: {
