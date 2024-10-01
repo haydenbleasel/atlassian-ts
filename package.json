@@ -52,7 +52,7 @@
   },
   "homepage": "https://github.com/haydenbleasel/atlassian-ts#readme",
   "devDependencies": {
-    "@biomejs/biome": "1.8.3",
+    "@biomejs/biome": "1.9.3",
     "@types/node": "^22.2.0",
     "tsup": "^8.2.4",
     "typescript": "^5.5.4",
