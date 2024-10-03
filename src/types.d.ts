@@ -21,6 +21,24 @@ export interface paths {
      */
     put: operations["setBanner"];
   };
+  "/rest/api/3/app/field/context/configuration/list": {
+    /**
+     * Bulk get custom field configurations
+     * @description Returns a [paginated](#pagination) list of configurations for list of custom fields of a [type](https://developer.atlassian.com/platform/forge/manifest-reference/modules/jira-custom-field-type/) created by a [Forge app](https://developer.atlassian.com/platform/forge/).
+     *
+     * The result can be filtered by one of these criteria:
+     *
+     *  *  `id`.
+     *  *  `fieldContextId`.
+     *  *  `issueId`.
+     *  *  `projectKeyOrId` and `issueTypeId`.
+     *
+     * Otherwise, all configurations for the provided list of custom fields are returned.
+     *
+     * **[Permissions](#permissions) required:** *Administer Jira* [global permission](https://confluence.atlassian.com/x/x4dKLg). Jira permissions are not required for the Forge app that provided the custom field type.
+     */
+    post: operations["getCustomFieldsConfigurations"];
+  };
   "/rest/api/3/app/field/value": {
     /**
      * Update custom fields
@@ -2862,7 +2880,6 @@ export interface paths {
      *  *  No notifications will be sent for moved worklogs.
      *  *  No webhooks or events will be sent for moved worklogs.
      *  *  No issue history will be recorded for moved worklogs.
-     *  *  Time tracking will not be updated for the source and destination issues.
      *
      * Time tracking must be enabled in Jira, otherwise this operation returns an error. For more information, see [Configuring time tracking](https://confluence.atlassian.com/x/qoXKM).
      *
@@ -5785,14 +5802,14 @@ export interface paths {
   "/rest/api/3/user/email": {
     /**
      * Get user email
-     * @description Returns a user's email address regardless of the user\\u2019s profile visibility settings. For Connect apps, this API is only available to apps approved by Atlassian, according to these [guidelines](https://community.developer.atlassian.com/t/guidelines-for-requesting-access-to-email-address/27603)
+     * @description Returns a user's email address regardless of the user's profile visibility settings. For Connect apps, this API is only available to apps approved by Atlassian, according to these [guidelines](https://community.developer.atlassian.com/t/guidelines-for-requesting-access-to-email-address/27603). For Forge apps, this API only supports access via asApp() requests.
      */
     get: operations["getUserEmail"];
   };
   "/rest/api/3/user/email/bulk": {
     /**
      * Get user email bulk
-     * @description Returns a user's email address regardless of the user\\u2019s profile visibility settings. For Connect apps, this API is only available to apps approved by Atlassian, according to these [guidelines](https://community.developer.atlassian.com/t/guidelines-for-requesting-access-to-email-address/27603)
+     * @description Returns a user's email address regardless of the user's profile visibility settings. For Connect apps, this API is only available to apps approved by Atlassian, according to these [guidelines](https://community.developer.atlassian.com/t/guidelines-for-requesting-access-to-email-address/27603). For Forge apps, this API only supports access via asApp() requests.
      */
     get: operations["getUserEmailBulk"];
   };
@@ -8675,6 +8692,19 @@ export interface components {
       /** @description The account id of the new owner. */
       newOwner: string;
     };
+    /** @description Details of the contextual configuration for a custom field. */
+    BulkContextualConfiguration: {
+      /** @description The field configuration. */
+      configuration?: unknown;
+      /** @description The ID of the custom field. */
+      customFieldId: string;
+      /** @description The ID of the field context the configuration is associated with. */
+      fieldContextId: string;
+      /** @description The ID of the configuration. */
+      id: string;
+      /** @description The field value schema. */
+      schema?: unknown;
+    };
     /** @description Details of the options to create for a custom field. */
     BulkCustomFieldOptionCreateRequest: {
       /** @description Details of options to create. */
@@ -9143,6 +9173,11 @@ export interface components {
       votingEnabled?: boolean;
       /** @description Whether the ability for users to watch issues is enabled. See [Configuring Jira application options](https://confluence.atlassian.com/x/uYXKM) for details. */
       watchingEnabled?: boolean;
+    };
+    /** @description List of custom fields identifiers which will be used to filter configurations */
+    ConfigurationsListParameters: {
+      /** @description List of IDs or keys of the custom fields. It can be a mix of IDs and keys in the same query. */
+      fieldIdsOrKeys: string[];
     };
     /** @description A list of custom field details. */
     ConnectCustomFieldValue: {
@@ -13181,6 +13216,38 @@ export interface components {
       total?: number;
       /** @description The list of items. */
       values?: readonly components["schemas"]["ComponentJsonBean"][];
+    };
+    /** @description A page of items. */
+    PageBeanBulkContextualConfiguration: {
+      /** @description Whether this is the last page. */
+      isLast?: boolean;
+      /**
+       * Format: int32
+       * @description The maximum number of items that could be returned.
+       */
+      maxResults?: number;
+      /**
+       * Format: uri
+       * @description If there is another page of results, the URL of the next page.
+       */
+      nextPage?: string;
+      /**
+       * Format: uri
+       * @description The URL of the page.
+       */
+      self?: string;
+      /**
+       * Format: int64
+       * @description The index of the first item returned.
+       */
+      startAt?: number;
+      /**
+       * Format: int64
+       * @description The number of items returned.
+       */
+      total?: number;
+      /** @description The list of items. */
+      values?: readonly components["schemas"]["BulkContextualConfiguration"][];
     };
     /** @description A page of items. */
     PageBeanChangelog: {
@@ -17285,17 +17352,13 @@ export interface components {
       isAvailable?: boolean;
       /** @description The issue type ID of the context. Null is treated as a wildcard, meaning the UI modification will be applied to all issue types. Each UI modification context can have a maximum of one wildcard. */
       issueTypeId?: string;
-      /** @description The portal ID of the context. */
-      portalId?: string;
       /** @description The project ID of the context. Null is treated as a wildcard, meaning the UI modification will be applied to all projects. Each UI modification context can have a maximum of one wildcard. */
       projectId?: string;
-      /** @description The request type ID of the context. */
-      requestTypeId?: string;
       /**
-       * @description The view type of the context. Only `GIC`(Global Issue Create) and `IssueView` are supported. Null is treated as a wildcard, meaning the UI modification will be applied to all view types. Each UI modification context can have a maximum of one wildcard.
+       * @description The view type of the context. Only `GIC`(Global Issue Create), `IssueView` and `IssueTransition` are supported. Null is treated as a wildcard, meaning the UI modification will be applied to all view types. Each UI modification context can have a maximum of one wildcard.
        * @enum {string}
        */
-      viewType?: "GIC" | "IssueView" | "JSMRequestCreate";
+      viewType?: "GIC" | "IssueView" | "IssueTransition";
     };
     /** @description The details of a UI modification. */
     UiModificationDetails: {
@@ -18982,6 +19045,78 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["ErrorCollection"];
         };
+      };
+    };
+  };
+  /**
+   * Bulk get custom field configurations
+   * @description Returns a [paginated](#pagination) list of configurations for list of custom fields of a [type](https://developer.atlassian.com/platform/forge/manifest-reference/modules/jira-custom-field-type/) created by a [Forge app](https://developer.atlassian.com/platform/forge/).
+   *
+   * The result can be filtered by one of these criteria:
+   *
+   *  *  `id`.
+   *  *  `fieldContextId`.
+   *  *  `issueId`.
+   *  *  `projectKeyOrId` and `issueTypeId`.
+   *
+   * Otherwise, all configurations for the provided list of custom fields are returned.
+   *
+   * **[Permissions](#permissions) required:** *Administer Jira* [global permission](https://confluence.atlassian.com/x/x4dKLg). Jira permissions are not required for the Forge app that provided the custom field type.
+   */
+  getCustomFieldsConfigurations: {
+    parameters: {
+      query?: {
+        /** @description The list of configuration IDs. To include multiple configurations, separate IDs with an ampersand: `id=10000&id=10001`. Can't be provided with `fieldContextId`, `issueId`, `projectKeyOrId`, or `issueTypeId`. */
+        id?: number[];
+        /** @description The list of field context IDs. To include multiple field contexts, separate IDs with an ampersand: `fieldContextId=10000&fieldContextId=10001`. Can't be provided with `id`, `issueId`, `projectKeyOrId`, or `issueTypeId`. */
+        fieldContextId?: number[];
+        /** @description The ID of the issue to filter results by. If the issue doesn't exist, an empty list is returned. Can't be provided with `projectKeyOrId`, or `issueTypeId`. */
+        issueId?: number;
+        /** @description The ID or key of the project to filter results by. Must be provided with `issueTypeId`. Can't be provided with `issueId`. */
+        projectKeyOrId?: string;
+        /** @description The ID of the issue type to filter results by. Must be provided with `projectKeyOrId`. Can't be provided with `issueId`. */
+        issueTypeId?: string;
+        /** @description The index of the first item to return in a page of results (page offset). */
+        startAt?: number;
+        /** @description The maximum number of items to return per page. */
+        maxResults?: number;
+      };
+    };
+    requestBody: {
+      content: {
+        /**
+         * @example {
+         *   "fieldIdsOrKeys": [
+         *     "customfield_10035",
+         *     "customfield_10036"
+         *   ]
+         * }
+         */
+        "application/json": components["schemas"]["ConfigurationsListParameters"];
+      };
+    };
+    responses: {
+      /** @description Returned if the request is successful. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["PageBeanBulkContextualConfiguration"];
+        };
+      };
+      /** @description Returned if the request is invalid. */
+      400: {
+        content: never;
+      };
+      /** @description Returned if the authentication credentials are incorrect or missing. */
+      401: {
+        content: never;
+      };
+      /** @description Returned if the user is not a Jira admin or the request is not authenticated as from the app that provided the field. */
+      403: {
+        content: never;
+      };
+      /** @description Returned if the custom field is not found. */
+      404: {
+        content: never;
       };
     };
   };
@@ -28684,6 +28819,9 @@ export interface operations {
    */
   deleteComment: {
     parameters: {
+      query?: {
+        parentId?: string;
+      };
       path: {
         /** @description The ID or key of the issue. */
         issueIdOrKey: string;
@@ -28852,6 +28990,7 @@ export interface operations {
        *
        *  *  the recipient is the same as the calling user.
        *  *  the recipient is invalid. For example, the recipient is set to the assignee, but the issue is unassigned.
+       *  *  the issueIdOrKey is of an invalid/null issue.
        *  *  the request is invalid. For example, required fields are missing or have invalid values.
        */
       400: {
@@ -30112,7 +30251,6 @@ export interface operations {
    *  *  No notifications will be sent for moved worklogs.
    *  *  No webhooks or events will be sent for moved worklogs.
    *  *  No issue history will be recorded for moved worklogs.
-   *  *  Time tracking will not be updated for the source and destination issues.
    *
    * Time tracking must be enabled in Jira, otherwise this operation returns an error. For more information, see [Configuring time tracking](https://confluence.atlassian.com/x/qoXKM).
    *
@@ -30126,7 +30264,14 @@ export interface operations {
   bulkMoveWorklogs: {
     parameters: {
       query?: {
-        /** @description Whether the work log entry should be added to the issue even if the issue is not editable, because jira.issue.editable set to false or missing. For example, the issue is closed. Connect and Forge app users with admin permission can use this flag. */
+        /**
+         * @description Defines how to update the issues' time estimate, the options are:
+         *
+         *  *  `leave` Leaves the estimate unchanged.
+         *  *  `auto` Reduces the estimate by the aggregate value of `timeSpent` across all worklogs being moved in the source issue, and increases it in the destination issue.
+         */
+        adjustEstimate?: "leave" | "auto";
+        /** @description Whether the work log entry should be moved to and from the issues even if the issues are not editable, because jira.issue.editable set to false or missing. For example, the issue is closed. Connect and Forge app users with admin permission can use this flag. */
         overrideEditableFlag?: boolean;
       };
       path: {
@@ -30178,7 +30323,7 @@ export interface operations {
       /**
        * @description Returned if:
        *
-       *  *  the issue is not found or the user does not have permission to view the issue
+       *  *  the source or destination issue is not found or the user does not have permission to view the issues
        *  *  at least one of the worklogs is not associated with the provided issue
        *  *  time tracking is disabled
        */
@@ -41344,23 +41489,22 @@ export interface operations {
          *   "contexts": [
          *     {
          *       "issueTypeId": "10000",
-         *       "portalId": "",
          *       "projectId": "10000",
-         *       "requestTypeId": "",
          *       "viewType": "GIC"
          *     },
          *     {
          *       "issueTypeId": "10001",
-         *       "portalId": "",
          *       "projectId": "10000",
-         *       "requestTypeId": "",
          *       "viewType": "IssueView"
          *     },
          *     {
          *       "issueTypeId": "10002",
-         *       "portalId": "",
          *       "projectId": "10000",
-         *       "requestTypeId": "",
+         *       "viewType": "IssueTransition"
+         *     },
+         *     {
+         *       "issueTypeId": "10003",
+         *       "projectId": "10000",
          *       "viewType": null
          *     }
          *   ],
@@ -41427,17 +41571,18 @@ export interface operations {
          *   "contexts": [
          *     {
          *       "issueTypeId": "10000",
-         *       "portalId": "",
          *       "projectId": "10000",
-         *       "requestTypeId": "",
          *       "viewType": "GIC"
          *     },
          *     {
          *       "issueTypeId": "10001",
-         *       "portalId": "",
          *       "projectId": "10000",
-         *       "requestTypeId": "",
          *       "viewType": "IssueView"
+         *     },
+         *     {
+         *       "issueTypeId": "10002",
+         *       "projectId": "10000",
+         *       "viewType": "IssueTransition"
          *     }
          *   ],
          *   "data": "{field: 'Story Points', config: {hidden: true}}",
@@ -42347,7 +42492,7 @@ export interface operations {
   };
   /**
    * Get user email
-   * @description Returns a user's email address regardless of the user\\u2019s profile visibility settings. For Connect apps, this API is only available to apps approved by Atlassian, according to these [guidelines](https://community.developer.atlassian.com/t/guidelines-for-requesting-access-to-email-address/27603)
+   * @description Returns a user's email address regardless of the user's profile visibility settings. For Connect apps, this API is only available to apps approved by Atlassian, according to these [guidelines](https://community.developer.atlassian.com/t/guidelines-for-requesting-access-to-email-address/27603). For Forge apps, this API only supports access via asApp() requests.
    */
   getUserEmail: {
     parameters: {
@@ -42383,7 +42528,7 @@ export interface operations {
   };
   /**
    * Get user email bulk
-   * @description Returns a user's email address regardless of the user\\u2019s profile visibility settings. For Connect apps, this API is only available to apps approved by Atlassian, according to these [guidelines](https://community.developer.atlassian.com/t/guidelines-for-requesting-access-to-email-address/27603)
+   * @description Returns a user's email address regardless of the user's profile visibility settings. For Connect apps, this API is only available to apps approved by Atlassian, according to these [guidelines](https://community.developer.atlassian.com/t/guidelines-for-requesting-access-to-email-address/27603). For Forge apps, this API only supports access via asApp() requests.
    */
   getUserEmailBulk: {
     parameters: {
