@@ -1,3 +1,24 @@
+# v1.0.8 (Thu Oct 03 2024)
+
+#### ⚠️ Pushed to `main`
+
+- Update types.d.ts ([@haydenbleasel](https://github.com/haydenbleasel))
+
+#### 🔩 Dependency Updates
+
+- Bump tsup from 8.2.4 to 8.3.0 [#9](https://github.com/haydenbleasel/atlassian-ts/pull/9) ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump ultracite from 4.0.6 to 4.1.4 [#8](https://github.com/haydenbleasel/atlassian-ts/pull/8) ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump typescript from 5.5.4 to 5.6.2 [#10](https://github.com/haydenbleasel/atlassian-ts/pull/10) ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump @types/node from 22.5.2 to 22.7.4 [#11](https://github.com/haydenbleasel/atlassian-ts/pull/11) ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump @biomejs/biome from 1.8.3 to 1.9.3 [#12](https://github.com/haydenbleasel/atlassian-ts/pull/12) ([@dependabot[bot]](https://github.com/dependabot[bot]))
+
+#### Authors: 2
+
+- [@dependabot[bot]](https://github.com/dependabot[bot])
+- Hayden Bleasel ([@haydenbleasel](https://github.com/haydenbleasel))
+
+---
+
 # v1.0.7 (Tue Sep 17 2024)
 
 #### ⚠️ Pushed to `main`
