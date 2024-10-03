@@ -1,6 +1,6 @@
 {
   "name": "atlassian-ts",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "A type-safe client for the Atlassian REST API, powered by openapi-fetch and ky.",
   "files": [
     "dist"
