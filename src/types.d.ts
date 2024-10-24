@@ -199,6 +199,7 @@ export interface paths {
      *
      *  *  *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project that the issue is in.
      *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
+     *  *  If attachments are added in private comments, the comment-level restriction will be applied.
      */
     get: operations["getAttachmentContent"];
   };
@@ -228,6 +229,7 @@ export interface paths {
      *
      *  *  *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project that the issue is in.
      *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
+     *  *  If attachments are added in private comments, the comment-level restriction will be applied.
      */
     get: operations["getAttachmentThumbnail"];
   };
@@ -242,6 +244,7 @@ export interface paths {
      *
      *  *  *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project that the issue is in.
      *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
+     *  *  If attachments are added in private comments, the comment-level restriction will be applied.
      */
     get: operations["getAttachment"];
     /**
@@ -270,6 +273,7 @@ export interface paths {
      *
      *  *  *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project that the issue is in.
      *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
+     *  *  If attachments are added in private comments, the comment-level restriction will be applied.
      */
     get: operations["expandAttachmentForHumans"];
   };
@@ -286,6 +290,7 @@ export interface paths {
      *
      *  *  *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project that the issue is in.
      *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
+     *  *  If attachments are added in private comments, the comment-level restriction will be applied.
      */
     get: operations["expandAttachmentForMachines"];
   };
@@ -2210,7 +2215,7 @@ export interface paths {
     get: operations["getIssue"];
     /**
      * Edit issue
-     * @description Edits an issue. Issue properties may be updated as part of the edit. Please note that issue transition will be ignored as it is not supported yet.
+     * @description Edits an issue. Issue properties may be updated as part of the edit. Please note that issue transition is not supported and is ignored here. To transition an issue, please use [Transition issue](#api-rest-api-3-issue-issueIdOrKey-transitions-post).
      *
      * The edits to the issue's fields are defined using `update` and `fields`. The fields that can be edited are determined using [ Get edit issue metadata](#api-rest-api-3-issue-issueIdOrKey-editmeta-get).
      *
@@ -17557,6 +17562,8 @@ export interface components {
        * @description The ID of the permission scheme for the project. Use the [Get all permission schemes](#api-rest-api-3-permissionscheme-get) resource to see a list of all permission scheme IDs.
        */
       permissionScheme?: number;
+      /** @description Previous project keys to be released from the current project. Released keys must belong to the current project and not contain the current project key */
+      releasedProjectKeys?: string[];
       /** @description A link to information about this project, such as project documentation */
       url?: string;
     };
@@ -19619,6 +19626,7 @@ export interface operations {
    *
    *  *  *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project that the issue is in.
    *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
+   *  *  If attachments are added in private comments, the comment-level restriction will be applied.
    */
   getAttachmentContent: {
     parameters: {
@@ -19709,6 +19717,7 @@ export interface operations {
    *
    *  *  *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project that the issue is in.
    *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
+   *  *  If attachments are added in private comments, the comment-level restriction will be applied.
    */
   getAttachmentThumbnail: {
     parameters: {
@@ -19772,6 +19781,7 @@ export interface operations {
    *
    *  *  *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project that the issue is in.
    *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
+   *  *  If attachments are added in private comments, the comment-level restriction will be applied.
    */
   getAttachment: {
     parameters: {
@@ -19856,6 +19866,7 @@ export interface operations {
    *
    *  *  *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project that the issue is in.
    *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
+   *  *  If attachments are added in private comments, the comment-level restriction will be applied.
    */
   expandAttachmentForHumans: {
     parameters: {
@@ -19906,6 +19917,7 @@ export interface operations {
    *
    *  *  *Browse projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project that the issue is in.
    *  *  If [issue-level security](https://confluence.atlassian.com/x/J4lKLg) is configured, issue-level security permission to view the issue.
+   *  *  If attachments are added in private comments, the comment-level restriction will be applied.
    */
   expandAttachmentForMachines: {
     parameters: {
@@ -27992,7 +28004,7 @@ export interface operations {
   };
   /**
    * Edit issue
-   * @description Edits an issue. Issue properties may be updated as part of the edit. Please note that issue transition will be ignored as it is not supported yet.
+   * @description Edits an issue. Issue properties may be updated as part of the edit. Please note that issue transition is not supported and is ignored here. To transition an issue, please use [Transition issue](#api-rest-api-3-issue-issueIdOrKey-transitions-post).
    *
    * The edits to the issue's fields are defined using `update` and `fields`. The fields that can be edited are determined using [ Get edit issue metadata](#api-rest-api-3-issue-issueIdOrKey-editmeta-get).
    *
