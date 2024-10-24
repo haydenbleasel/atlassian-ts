@@ -1,3 +1,15 @@
+# v1.0.9 (Thu Oct 24 2024)
+
+#### ⚠️ Pushed to `main`
+
+- Update types.d.ts ([@haydenbleasel](https://github.com/haydenbleasel))
+
+#### Authors: 1
+
+- Hayden Bleasel ([@haydenbleasel](https://github.com/haydenbleasel))
+
+---
+
 # v1.0.8 (Thu Oct 03 2024)
 
 #### ⚠️ Pushed to `main`
